@@ -4,8 +4,8 @@ var express = require('express')
 	,UserHandler = require('./handlers/UserHandler')
 	,AuthHandler = require('./handlers/AuthHandler')
 	,passport = require('passport')
-	,mongoose = require('mongoose')
-	,UserDB = require('./models/user')
+	,mysqldb = require('./models/db')
+//	,UserDB = require('./models/user')
 
 var app = express();
 
@@ -13,7 +13,7 @@ var google_strategy = require('passport-google-oauth').OAuth2Strategy;
 
 app.configure(function() {
 
-	app.set('client-url','http://localhost:8000');
+	app.set('client-url','http://ai1dev2.kinisi.cc:3000');
 	app.set('client-google-signin','/google?action=signin');
 	app.disable('x-powered-by');
 
@@ -46,15 +46,14 @@ app.configure('development', function() {
 });
 
 
-mongoose.connect('mongodb://localhost/YOUR MONGO SERVER');
-
-var db = mongoose.connection;
-
-db.on('error',console.error.bind(console, 'connection error:'));
-db.once('open', function callback() {
-	console.log("Connected to db");
-});
-
+//mongoose.connect('mongodb://localhost/YOUR MONGO SERVER');
+//
+//var db = mongoose.connection;
+//
+//db.on('error',console.error.bind(console, 'connection error:'));
+//db.once('open', function callback() {
+//	console.log("Connected to db");
+//});
 
 passport.use(new google_strategy({
     clientID: '584161997041-1sg7o8lonfli4rpfns07o1uu2gqnqe7t.apps.googleusercontent.com',
@@ -62,17 +61,20 @@ passport.use(new google_strategy({
     callbackURL: 'http://ai1dev2.kinisi.cc:3000/auth/google/callback'
   },
   function(accessToken, refreshToken, profile, done) {
-	UserDB.findOne({email: profile._json.email},function(err,usr) {
-		usr.token = accessToken;	
-		usr.save(function(err,usr,num) {
-			if(err)	{
-				console.log('error saving token');
-			}
-		});
+//	UserDB.findOne({email: profile._json.email},function(err,usr) {
+//		usr.token = accessToken;	
+//		usr.save(function(err,usr,num) {
+//			if(err)	{
+//				console.log('error saving token');
+//			}
+//		});
+//		process.nextTick(function() {
+//			return done(null,profile);
+//		});
+//	});
 		process.nextTick(function() {
 			return done(null,profile);
 		});
-	});
   }
 ));
 

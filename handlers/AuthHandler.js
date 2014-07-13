@@ -21,18 +21,20 @@ function googleSignIn(req, res, next) {
 function googleSignInCallback(req, res, next) {
 	passport = req._passport.instance;
 	passport.authenticate('google',function(err, user, info) {
+		console.log('user-info', user,info);
 		if(err) {
 			return next(err);
 		}
 		if(!user) {
-			return res.redirect('http://localhost:8000');
+			return res.redirect('http://localhost:3000');
 		}
-		UserDB.findOne({email: user._json.email},function(err,usr) {
-			res.writeHead(302, {
-				'Location': 'http://localhost:8000/#/index?token=' + usr.token + '&user=' + usr.email
-			});
-			res.end();
-		});
+                res.end(JSON.stringify(err)+'<br>'+JSON.stringify(user)+'<br>'+JSON.stringify(info));
+//		UserDB.findOne({email: user._json.email},function(err,usr) {
+//			res.writeHead(302, {
+//				'Location': 'http://localhost:3000/#/index?token=' + usr.token + '&user=' + usr.email
+//			});
+//			res.end();
+//		});
 	})(req,res,next);
 };
 
