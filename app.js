@@ -4,8 +4,7 @@ var express = require('express')
 	,UserHandler = require('./handlers/UserHandler')
 	,AuthHandler = require('./handlers/AuthHandler')
 	,passport = require('passport')
-	,mongoose = require('mongoose')
-	,UserDB = require('./models/user')
+	,user = require('./models/user')
 
 var app = express();
 
@@ -45,37 +44,17 @@ app.configure('development', function() {
 	console.log("Starting in development mode");
 });
 
-
-mongoose.connect('mongodb://localhost/YOUR MONGO SERVER');
-
-var db = mongoose.connection;
-
-db.on('error',console.error.bind(console, 'connection error:'));
-db.once('open', function callback() {
-	console.log("Connected to db");
-});
-
-
 passport.use(new google_strategy({
     clientID: '584161997041-1sg7o8lonfli4rpfns07o1uu2gqnqe7t.apps.googleusercontent.com',
     clientSecret: 'qCb7zqEkBxvu74fjihbbHRK4',
     callbackURL: 'http://ai1dev2.kinisi.cc:3000/auth/google/callback'
-  },
-  function(accessToken, refreshToken, profile, done) {
-	UserDB.findOne({email: profile._json.email},function(err,usr) {
-		usr.token = accessToken;	
-		usr.save(function(err,usr,num) {
-			if(err)	{
-				console.log('error saving token');
-			}
-		});
-		process.nextTick(function() {
-			return done(null,profile);
-		});
-	});
-  }
+},
+function(accessToken, refreshToken, profile, done) {
+    user.saveToken(profile._json.email, accessToken, function(err) {
+        done(err, { "token": accessToken, "profile": profile });
+    });
+}
 ));
-
 
 var handlers = {
 	user: new UserHandler(),
@@ -86,5 +65,3 @@ routes.setup(app,handlers);
 
 app.listen(3000);
 console.log('Listening on port 3000');
-
-

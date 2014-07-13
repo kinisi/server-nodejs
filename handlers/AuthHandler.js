@@ -1,4 +1,4 @@
-var UserDB = require('../models/user')
+var db = require("../models/db");
 
 var AuthHandler = function() {
 	this.googleSignIn = googleSignIn;
@@ -24,15 +24,16 @@ function googleSignInCallback(req, res, next) {
 		if(err) {
 			return next(err);
 		}
-		if(!user) {
-			return res.redirect('http://localhost:8000');
-		}
-		UserDB.findOne({email: user._json.email},function(err,usr) {
-			res.writeHead(302, {
-				'Location': 'http://localhost:8000/#/index?token=' + usr.token + '&user=' + usr.email
-			});
-			res.end();
-		});
+
+        var body = "<pre>" + JSON.stringify(user,null,"\t") + "\n" + JSON.stringify(info,null,"\t") + "</pre>";
+
+        db.query("SELECT id, oauth_token FROM api_token a JOIN oauth_token o ON a.id = o.user_id WHERE o.oauth_token = ? and o.oauth_service = 'google'", [user.token], function(err, rows, fields) { 
+        
+        body += "<div><a href=\"/user/" + rows[0].id + "?token=" + rows[0].oauth_token + "\">This is your user record</a></div>";
+
+        res.writeHead(200, { "Content-Type": "text/html", "Content-Length": body.length });
+        res.end(body);
+        });
 	})(req,res,next);
 };
 

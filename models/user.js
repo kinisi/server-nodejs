@@ -1,17 +1,10 @@
-// User Schema
-//
-// 
+var db = require("./db");
 
-var mongoose = require('mongoose');
+module.exports.saveToken = function(email, accessToken, callback) {
+    db.query("insert into oauth_token (user_id, oauth_service, oauth_token, oauth_expires) select id, 'google', ?, date_add(now(), interval 1 hour) from api_token where email = ?", 
+        [accessToken, email], 
+        function(err, rows, fields) {
+            callback(err);
+        });
+};
 
-var schema =  new mongoose.Schema(
-	{
-		_id: mongoose.Schema.Types.ObjectId
-		,last_name: {type: String, required: true}
-		,first_name: {type: String, required: true}
-		,email: {type: String, required: true}
-		,token: {type: String, required: false}
-	}
-);
-
-module.exports = mongoose.model('User', schema);

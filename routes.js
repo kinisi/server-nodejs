@@ -6,8 +6,8 @@ function setup(app,handlers) {
 	app.get('/auth/local',handlers.auth.localSignIn);
 	app.get('/auth/local/callback',handlers.auth.localSignInCallback);
 	app.get('/user',handlers.user.getUsers);
+	app.get('/token/:token',handlers.user.getUserByToken);
 	app.get('/user/:id',handlers.user.getUser);
-	app.put('/user/:id',handlers.user.updateUser);
 	app.get('/user/:first/:last/:email',handlers.user.createUser);
 	console.log("Successfully set up routes");
 };
