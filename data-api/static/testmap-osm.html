@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Simple Visualizer</title>
+    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+    <style>
+
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding: 0px
+    }
+
+    #messages {
+        position: absolute;
+        bottom: 0px;
+        left: 0px;
+        width: 100%;
+        display: none;
+    }
+
+    #status {
+        font-family: Calibri;
+        position: relative;
+        background-color: rgba(255,255,255,0.75);
+        margin: auto;
+        width: 600px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        padding: 12px;
+        text-align: center;
+    }
+
+    #timerange {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+    }
+
+    #timerange>div {
+        font-family: Calibri;
+        position: relative;
+        background-color: rgba(255,255,255,0.75);
+        margin: auto;
+        width: 360px;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+        padding: 12px;
+        text-align: center;
+    }
+
+    #datepicker {
+        border: 0px;
+        background: transparent;
+        font-size: 20px;
+        font-family: Calibri;
+        width: 100px;
+    }
+
+    #device_id {
+        position: absolute;
+        top: 5px;
+        right: 100px;
+    }
+
+    #route {
+        float: right;
+        background: white;
+        border: 1px solid gray;
+        border-radius: 5px;
+        outline: none;
+    }
+
+    #route.enabled {
+        background: linear-gradient(white,lightgreen);
+        box-shadow: inset 1px 1px 3px rgba(0,0,0,0.5);
+    }
+
+    .time {
+        border: 0px;
+        background: transparent;
+        font-size: 14px; 
+        font-family: Calibri;
+        width: 60px;
+        text-align: center;
+    }
+
+    .ui-widget {
+        font-family: Calibri;
+        font-size: 1em;
+    }
+    .ui-slider-horizontal {
+        height: 5px;
+    }
+
+    .slider .ui-state-default {
+        background: none;
+    }
+    .ui-slider .ui-slider-handle {
+        width: 8px;
+        height: 12px;
+        margin-left: -5px;
+        background: rgba(100,200,100,0.9);
+        cursor: pointer;
+        top:-4px;
+        border:none;
+    }
+
+    .ui-slider .ui-slider-handle:last-child {
+        background: rgba(50,100,250,0.9);
+    }
+
+    .slider {
+        height: 10px;
+    }
+  </style>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+<script src="js/leaflet.geometryutil.js"></script> 
+
+    <script type="text/javascript">
+
+var map = null;
+var polylines = [];
+var pathdata = [];
+var queryTimer = null;
+var QUERY_LIMIT=5000;
+var RENDER_MAXSEGMENTS = 50;
+
+$(document).ready(function(){ initialize(); });
+
+function initialize() {
+
+    // From: http://switch2osm.org/using-tiles/getting-started-with-leaflet/
+    // set up the map
+    map = new L.Map('map-canvas');
+
+    // create the tile layer with correct attribution
+    var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+    var osm = new L.TileLayer(osmUrl, {minZoom: 8, maxZoom: 18, attribution: osmAttrib});		
+
+        $('#map-canvas').show();
+    // start the map in New York
+    map.setView(new L.LatLng(40.7127, -74.0059),14);
+    map.addLayer(osm);
+
+    $("#slider").slider({
+        range: true,
+        min: 0,
+        max: 24*60*60,
+        values: [ 0 , 24*60*60-1 ],
+        step: 1,
+        slide: function(event, ui) {
+            var date = new Date($("#datepicker").val()).getTime();
+            var fromtime = new Date(date+(ui.values[0]*1000)).toISOString().match(/\d\d:\d\d:\d\d/);
+            var totime = new Date(date+(ui.values[1]*1000-1)).toISOString().match(/\d\d:\d\d:\d\d/);
+            $("#fromtime").val(fromtime);
+            $("#totime").val(totime);
+            queryData();
+        }
+    });
+
+    $("#datepicker").datepicker({
+        dateFormat: "yy-mm-dd",
+        onSelect: function(dt) {
+            $("#slider").slider("values", [ 0 , 24*60*60-1 ])
+            $("#fromtime").val("00:00:00");
+            $("#totime").val("23:59:59");
+            queryData();
+        }
+    }).datepicker("setDate", "2014-04-28");
+
+    $("#fromtime, #totime").keyup(function(e) {
+        if(e.keyCode == 13) {
+            var date = new Date($("#datepicker").val()).getTime();
+            var fromvalue = (new Date($("#datepicker").val() + "T" + $("#fromtime").val()).getTime() - date) / 1000;
+            var tovalue = (new Date($("#datepicker").val() + "T" + $("#totime").val()).getTime() - date) / 1000;
+            $("#slider").slider("values", [fromvalue, tovalue] );
+            queryData();
+        }
+    });
+
+    $("#route").click(function() { 
+        $(this).toggleClass("enabled");
+        renderPaths();
+    });
+
+    queryData();
+}
+
+function queryData() {
+    if(!queryTimer) {
+        queryTimer = setTimeout(function() { 
+            var device_id = $("#device_id").val();
+            var date = $("#datepicker").val();
+            var fromtime = $("#fromtime").val();
+            var totime = $("#totime").val();
+
+            var url = "/table/device_location?api_token=N9yCFXqDJvg6&c=measure_time,latitude,longitude&f=latitude|ne|0;measure_time|gte|" + date+"T"+fromtime + ";measure_time|lt|" + date+"T"+totime + ";device_id|eq|" + device_id + "&o=measure_time&limit=" + QUERY_LIMIT;
+
+            $.getJSON(url, loadKinisiData).complete(function() { queryTimer = null; });
+        }, 1000);
+    }
+}
+
+function loadKinisiData(data) {
+    if(!data.length) {
+        showMessage("No data.");
+        return;
+    } else if(data.length == QUERY_LIMIT) {
+        showMessage("Showing the limit of " + QUERY_LIMIT + " data points. Choose a smaller time range.");
+    } else {
+        showMessage("Loaded: " + data.length + " data points");
+    }
+
+    pathdata = {
+        "totallength": data.length,
+        "segments": []
+    };
+
+    for(var i = 0, len = data.length, step = data.length / Math.min(RENDER_MAXSEGMENTS, data.length); i < len; i += Math.min(step, len - i)) {
+       pathdata.segments.push(data.slice(i, i + step + 1 /* overlap with next segment */));
+    }
+
+    var first = data[0], last = data[data.length-1];
+    var fromdate = new Date(first.measure_time.replace(/ /,"T"));
+    var fromtime = fromdate.toISOString().match(/\d\d:\d\d:\d\d/);
+    var fromvalue = fromdate.getTime() % (24*60*60*1000) / 1000;
+    var todate = new Date(last.measure_time.replace(/ /,"T"));
+    var tovalue = todate.getTime() % (24*60*60*1000) / 1000;
+    var totime = todate.toISOString().match(/\d\d:\d\d:\d\d/);
+
+    $("#fromtime").val(fromtime);
+    $("#totime").val(totime);
+    $("#slider").slider("values", [fromvalue, tovalue]);
+
+    map.setView(new L.latLng(first.latitude, first.longitude));
+
+    renderPaths();
+}
+
+function render(data, colormap) {
+    var color = ((colormap instanceof Function) ? colormap(polylines.length) : colormap[polylines.length]);
+    var path = new L.polyline(data.map(function(d) { return new L.latLng(d.latitude, d.longitude); }), {color: color, opacity: 1.0, weight: 2});
+    polylines.push(path);
+    path.addTo(map);
+}
+
+function clearPaths() {
+    //polylines.forEach(function(p) { p.setMap(null); });
+    while(polylines.length > 0) { polylines.pop(); }
+}
+
+function renderPaths() {
+    if($("#route").hasClass("enabled")) {
+        renderSpeed();
+    } else {
+        renderMovement();
+    }
+}
+
+function renderMovement() {
+    var colormap = function(n) {
+        var colorstep = Math.floor(255 / RENDER_MAXSEGMENTS);
+        return "rgb(40," + Math.max(0,255 - colorstep*n) + "," + Math.max(0,colorstep*n) + ")";
+    };
+
+    clearPaths();
+    pathdata.segments.forEach(function(s) { render(s, colormap); });
+}
+
+function renderSpeed() {
+    var stats = {
+        "total_distance": 0,
+        "total_time": 0
+    };
+    stats.ds_dt = polylines.map(function(p,i) {
+            var s = pathdata.segments[i];
+            var ds = L.GeometryUtil.length(p);
+            var dt = new Date(s[s.length-1].measure_time) - new Date(s[0].measure_time);
+            stats.total_distance += ds;
+            stats.total_time += dt;
+            return { "i": i, "ds": ds, "dt": dt, "ds_dt": ds/dt };
+        });
+    
+    stats.ds_dt.sort(function(a,b) { return a.ds_dt > b.ds_dt ? 1 : -1; });
+
+    stats.ds_dt.forEach(function(o,i,a) { o.ntile = 1.0*i/a.length; });
+
+    stats.ds_dt.sort(function(a,b) { return a.i > b.i ? 1 : -1; });
+
+    var colormap = function(n) {
+        if(stats.ds_dt[n].ntile < .25) { return "rgb(255,0,0)"; }
+        if(stats.ds_dt[n].ntile < .50) { return "rgb(255,150,0)"; }
+        if(stats.ds_dt[n].ntile < .75) { return "rgb(150,255,0)"; }
+        return "rgb(0,255,0)"; 
+    };
+
+    showMessage("Total Distance: " + Math.round(stats.total_distance/1000.0, 2) + "km, Total Time: " + Math.floor(stats.total_time/(60*60*1000)) + "h" + Math.floor(stats.total_time%(60*60*1000)/(60*1000)) + "m", true);
+
+    clearPaths();
+    pathdata.segments.forEach(function(s) { render(s, colormap); });
+}
+
+function showMessage(m, persist) {
+    $("#status").text(m);
+    $("#messages").slideDown();
+    if(!persist) { $("#messages").delay(5000).slideUp(); }
+}
+
+    </script>
+ </head>
+
+  <body>
+
+    <div id="map-canvas"></div>
+    <div id="timerange">
+        <div>
+            <input type="text" id="datepicker"/>
+            <input type="text" id="fromtime" value="00:00:00" class="time"/> to <input type="text" id="totime" value="23:59:59" class="time" /> GMT
+            <button id="route" title="Show Average Speed" class="glyphicon glyphicon-road"></button>
+            <div id="slider"></div>
+        </div>
+    </div>
+    <select id="device_id">
+       <option value="kpi-1">kpi-1</option>
+       <option value="00000000f2d6e95e">00000000f2d6e95e</option>
+       <option value="kpoc-tca-06">kpoc-tca-06</option> 
+       <option value="0000000084cbd392">0000000084cbd392</option> 
+    </select>
+    <div id="messages"><div id="status"></div></div>
+</body>
+</html>
+
