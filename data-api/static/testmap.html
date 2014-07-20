@@ -4,17 +4,18 @@
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
     <title>Simple Visualizer</title>
-    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" rel="stylesheet">
+    <link href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
     <style>
 
       html, body, #map-canvas {
         height: 100%;
         margin: 0px;
-        padding: 0px
+        padding: 0px;
     }
 
     #messages {
+        z-index: 2;
         position: absolute;
         bottom: 0px;
         left: 0px;
@@ -22,49 +23,75 @@
         display: none;
     }
 
-    #status {
-        font-family: Calibri;
-        position: relative;
-        background-color: rgba(255,255,255,0.75);
-        margin: auto;
-        width: 600px;
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
-        padding: 12px;
-        text-align: center;
-    }
-
     #timerange {
+        z-index: 2;
         position: absolute;
         top: 0px;
         left: 0px;
         width: 100%;
+        height: 0px;
     }
 
-    #timerange>div {
-        font-family: Calibri;
-        position: relative;
+    #device_id {
+        display: none;
+        position: absolute;
+        bottom: 15px;
+        right: 5px;
+    }
+
+    #menubutton {
+       z-index: 1000;
+       position: absolute;
+       top: 5px;
+       left: 35px;
+       border: 1px solid gray;
+       border-radius: 5px;
+       
+       background-color: rgba(255,255,255,0.75);
+    }
+
+    .navicon {
+	height: 15px;
+	width: 24px;
+	margin: 8px;
+	border-top: 9px double #000;
+	border-bottom: 3px solid #000;
+    }
+
+    .hud {
+        font-family: Futura,Calibri,sans-serif;
         background-color: rgba(255,255,255,0.75);
-        margin: auto;
-        width: 360px;
-        border-bottom-left-radius: 10px;
-        border-bottom-right-radius: 10px;
+        width: 100%;
         padding: 12px;
         text-align: center;
     }
 
-    #datepicker {
+    @media (min-width:600px) {
+	.navicon { display: none; }
+        .hud { 
+            margin: auto;
+            position: relative;
+            width: 600px; 
+        }
+        .hud-top {
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+	}
+        .hud-bottom {
+            border-top-left-radius: 10px; 
+            border-top-right-radius: 10px;
+	}
+        .linebreak {
+            display: none; 
+        }
+    }
+
+    #fromdate {
         border: 0px;
         background: transparent;
         font-size: 20px;
-        font-family: Calibri;
-        width: 100px;
-    }
-
-    #device_id {
-        position: absolute;
-        top: 5px;
-        right: 100px;
+        font-family: Futura,Calibri,sans-serif;
+        width: 124px;
     }
 
     #route {
@@ -84,13 +111,13 @@
         border: 0px;
         background: transparent;
         font-size: 14px; 
-        font-family: Calibri;
-        width: 60px;
+        font-family: Futura,Calibri,sans-serif;
+        width: 80px;
         text-align: center;
     }
 
     .ui-widget {
-        font-family: Calibri;
+        font-family: Futura,Calibri,sans-serif;
         font-size: 1em;
     }
     .ui-slider-horizontal {
@@ -117,24 +144,117 @@
     .slider {
         height: 10px;
     }
+    
+    .mapLabel {
+        position: absolute;
+        display: none;
+        background-color: rgba(255,255,255,0.9);
+        padding: 4px;
+        border-radius: 0px 10px 10px 10px;
+        cursor: default;
+    }
+    
+    .mapLabel span {
+        position: relative;
+        padding: 10px; 
+        font-familiy: Futura,Calibri,sans-serif;
+    }
+    
+    .mapLabel pre {
+        white-space: pre;
+    }
   </style>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCJdACkAEL9suq0VmQIX6Q7dW0UM4SMWd4&sensor=false"></script>
+<script type="text/javascript">
+// Define the overlay, derived from google.maps.OverlayView
+function Label(opt_options) {
+    // Initialization
+    this.setValues(opt_options);
 
+    // Label specific
+    var span = this.span_ = document.createElement('span');
+    var div = this.div_ = document.createElement('div');
+    div.appendChild(span);
+    div.className = 'mapLabel';
+    var labelObj = this;
+    google.maps.event.addDomListener(div, "mousedown", function(e) { 
+        e.cancelBubble = true; if(e.stopPropagation) { e.stopPropagation(); } 
+    });
+    google.maps.event.addDomListener(div, "click", function(e) { 
+        e.cancelBubble = true; if(e.stopPropagation) { e.stopPropagation(); } 
+    });
+    google.maps.event.addDomListener(div, "dblclick", function(e) { 
+        labelObj.setMap(null);
+        e.cancelBubble = true; if(e.stopPropagation) { e.stopPropagation(); } 
+    });
+   google.maps.event.addDomListener(div, "keydown", function(e) {
+        console.log(e);
+        e.cancelBubble = true; if(e.stopPropagation) { e.stopPropagation(); } 
+    });
+}
+Label.prototype = new google.maps.OverlayView();
+
+// Implement onAdd
+Label.prototype.onAdd = function() {
+    var pane = this.getPanes().floatPane;
+    pane.appendChild(this.div_);
+
+    // Ensures the label is redrawn if the text or position is changed.
+    var me = this;
+    this.listeners_ = [
+        google.maps.event.addListener(this, 'position_changed',
+            function() { me.draw(); }),
+        google.maps.event.addListener(this, 'text_changed',
+            function() { me.draw(); })
+    ];
+};
+
+// Implement onRemove
+Label.prototype.onRemove = function() {
+    var i, I;
+    this.div_.parentNode.removeChild(this.div_);
+
+    // Label is removed from the map, stop updating its position/text.
+    for (i = 0, I = this.listeners_.length; i < I; ++i) {
+        google.maps.event.removeListener(this.listeners_[i]);
+    }
+};
+
+// Implement draw
+Label.prototype.draw = function() {
+    var projection = this.getProjection();
+    var position = projection.fromLatLngToDivPixel(this.get('position'));
+
+    var div = this.div_;
+    div.style.left = position.x + 'px';
+    div.style.top = position.y + 'px';
+    div.style.display = 'block';
+
+    this.span_.innerHTML = this.get('text').toString();
+};
+</script>
     <script type="text/javascript">
 
 var map = null;
+var zoom = [];
+var labelMarker = null;
+var myLabel = new Label();
 var polylines = [];
 var pathdata = [];
 var queryTimer = null;
-var QUERY_LIMIT=5000;
+var QUERY_LIMIT=17280;
 var RENDER_MAXSEGMENTS = 50;
 
 google.maps.event.addDomListener(window, 'load', initialize);
 
-
 function initialize() {
+    var qs = location.search.slice(1).split("&").reduce(function(p,c) { c.split("=").every(function(k,i,a) { p[k] = a[i+1]; }); return p; }, {});
+
+    for(var s in qs) {
+        $("#" + s).val(qs[s]);
+    }
 
     var mapOptions = {
         zoom: 14,
@@ -143,6 +263,14 @@ function initialize() {
     };
 
     map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+    
+    labelMarker = new google.maps.Marker({
+        position: new google.maps.LatLng(40.7127, -74.0059),  
+        map: map,
+        visible: false
+    });
+
+    $("#menubutton").click(function() { $("#timerange").toggle(); });
 
     $("#slider").slider({
         range: true,
@@ -151,7 +279,7 @@ function initialize() {
         values: [ 0 , 24*60*60-1 ],
         step: 1,
         slide: function(event, ui) {
-            var date = new Date($("#datepicker").val()).getTime();
+            var date = new Date($("#fromdate").val()).getTime();
             var fromtime = new Date(date+(ui.values[0]*1000)).toISOString().match(/\d\d:\d\d:\d\d/);
             var totime = new Date(date+(ui.values[1]*1000-1)).toISOString().match(/\d\d:\d\d:\d\d/);
             $("#fromtime").val(fromtime);
@@ -160,7 +288,7 @@ function initialize() {
         }
     });
 
-    $("#datepicker").datepicker({
+    $("#fromdate").datepicker({
         dateFormat: "yy-mm-dd",
         onSelect: function(dt) {
             $("#slider").slider("values", [ 0 , 24*60*60-1 ])
@@ -168,13 +296,13 @@ function initialize() {
             $("#totime").val("23:59:59");
             queryData();
         }
-    }).datepicker("setDate", "2014-04-28");
+    }).datepicker("setDate", qs.fromdate || "2014-05-27");
 
     $("#fromtime, #totime").keyup(function(e) {
         if(e.keyCode == 13) {
-            var date = new Date($("#datepicker").val()).getTime();
-            var fromvalue = (new Date($("#datepicker").val() + "T" + $("#fromtime").val()).getTime() - date) / 1000;
-            var tovalue = (new Date($("#datepicker").val() + "T" + $("#totime").val()).getTime() - date) / 1000;
+            var date = new Date($("#fromdate").val()).getTime();
+            var fromvalue = (new Date($("#fromdate").val() + "T" + $("#fromtime").val()).getTime() - date) / 1000;
+            var tovalue = (new Date($("#fromdate").val() + "T" + $("#totime").val()).getTime() - date) / 1000;
             $("#slider").slider("values", [fromvalue, tovalue] );
             queryData();
         }
@@ -182,7 +310,8 @@ function initialize() {
 
     $("#route").click(function() { 
         $(this).toggleClass("enabled");
-        renderPaths();
+        var zw = zoomWindow(); 
+        renderPaths(pathdata.slice(zw.from, zw.to));
     });
 
     queryData();
@@ -192,11 +321,11 @@ function queryData() {
     if(!queryTimer) {
         queryTimer = setTimeout(function() { 
             var device_id = $("#device_id").val();
-            var date = $("#datepicker").val();
+            var date = $("#fromdate").val();
             var fromtime = $("#fromtime").val();
             var totime = $("#totime").val();
 
-            var url = "/table/device_location?api_token=N9yCFXqDJvg6&c=measure_time,latitude,longitude&f=latitude|ne|0;measure_time|gte|" + date+"T"+fromtime + ";measure_time|lt|" + date+"T"+totime + ";device_id|eq|" + device_id + "&o=measure_time&limit=" + QUERY_LIMIT;
+            var url = "/table/v_device_location?api_token=N9yCFXqDJvg6&c=measure_time,latitude,longitude&f=latitude|ne|0;measure_time|gte|" + date+"T"+fromtime + ";measure_time|lt|" + date+"T"+totime + ";device_id|eq|" + device_id + "&o=measure_time&limit=" + QUERY_LIMIT;
 
             $.getJSON(url, loadKinisiData).complete(function() { queryTimer = null; });
         }, 1000);
@@ -213,30 +342,9 @@ function loadKinisiData(data) {
         showMessage("Loaded: " + data.length + " data points");
     }
 
-    pathdata = {
-        "totallength": data.length,
-        "segments": []
-    };
+    pathdata = data; 
 
-    for(var i = 0, len = data.length, step = data.length / Math.min(RENDER_MAXSEGMENTS, data.length); i < len; i += Math.min(step, len - i)) {
-       pathdata.segments.push(data.slice(i, i + step + 1 /* overlap with next segment */));
-    }
-
-    var first = data[0], last = data[data.length-1];
-    var fromdate = new Date(first.measure_time.replace(/ /,"T"));
-    var fromtime = fromdate.toISOString().match(/\d\d:\d\d:\d\d/);
-    var fromvalue = fromdate.getTime() % (24*60*60*1000) / 1000;
-    var todate = new Date(last.measure_time.replace(/ /,"T"));
-    var tovalue = todate.getTime() % (24*60*60*1000) / 1000;
-    var totime = todate.toISOString().match(/\d\d:\d\d:\d\d/);
-
-    $("#fromtime").val(fromtime);
-    $("#totime").val(totime);
-    $("#slider").slider("values", [fromvalue, tovalue]);
-
-    map.panTo(new google.maps.LatLng(first.latitude, first.longitude));
-
-    renderPaths();
+    renderPaths(data);
 }
 
 function render(data, colormap) {
@@ -246,50 +354,154 @@ function render(data, colormap) {
         geodesic: true,
         strokeColor: color,
         strokeOpacity: 1,
-        strokeWeight: 2
+        strokeWeight: 4
+    });
+
+    google.maps.event.addListener(path, "click", 
+    function(e) {
+        var idx = findClosest(e.latLng);        
+        showPoint(idx);
     });
 
     polylines.push(path);
     path.setMap(map);
 }
 
+function showPoint(i) {
+    var el = pathdata[i];
+    var ll = new google.maps.LatLng(el.latitude, el.longitude);
+    myLabel.set("position", ll);
+    myLabel.set("text", "<pre>" + JSON.stringify(el, null, "    ") + "</pre>" + 
+      "<div>" + 
+      (zoomWindow().step > 1 ? "<a href=\"javascript:zoomSegment(" + i + ")\">Zoom to Segment</a>" : "") +
+      (zoomWindow().from != 0 ? "&nbsp;|&nbsp;<a href=\"javascript:unzoom()\">Unzoom</a>" : "") +
+      "&nbsp;|&nbsp;<a href=\"javascript:prevPoint(" + i + ")\">Prev Point</a>" + 
+      "&nbsp;|&nbsp;<a href=\"javascript:nextPoint(" + i + ")\">Next Point</a>" + 
+      "</div>"
+    );
+    myLabel.setMap(map);
+    map.panTo(ll);
+}
+
+function zoomWindow() {
+    var step = pathdata.length;
+    var nextstep = step;
+    var from = 0;
+    var to = pathdata.length - 1;
+    
+    for(var i = 0, len = zoom.length; i < len; i++) {
+        var idx = zoom[i];
+        step = Math.floor(step / Math.min(RENDER_MAXSEGMENTS, step));
+        from = from + Math.floor((idx - from)/step) * step;
+    }
+    return { from: from, to: from+step, step: step }
+} 
+
+function zoomSegment(i) {
+        zoom.push(i);
+        var zw = zoomWindow();
+        renderPaths(pathdata.slice(zw.from, zw.to));
+        
+        // hack it to re-render the detail box:
+        showPoint(i);
+}
+
+function unzoom() {
+    if(zoom.length > 0) {
+        showPoint(zoom.pop());
+        var zw = zoomWindow();
+        renderPaths(pathdata.slice(zw.from, zw.to));
+    }
+}
+
+function prevPoint(i) {
+    if(--i >= 0) {
+        var popped = false; 
+        while(i < zoomWindow().from) { zoom.pop(); popped = true; }
+        if(popped) {
+            zoom.push(i); 
+            var zw = zoomWindow();
+            renderPaths(pathdata.slice(zw.from, zw.to));
+        }
+        showPoint(i);
+    }
+}
+
+function nextPoint(i) {
+    if(++i < pathdata.length) {
+        var popped = false;
+        while(i >= zoomWindow().to) { zoom.pop(); popped = true; }
+        if(popped) {
+            zoom.push(i);
+            var zw = zoomWindow();
+            renderPaths(pathdata.slice(zw.from, zw.to));
+        }
+        showPoint(i);
+    }
+}
+
+function findClosest(latLng) {
+    var closest = pathdata.reduce(function(p,c,i) {
+        var d = google.maps.geometry.spherical.computeDistanceBetween(latLng, 
+            new google.maps.LatLng(c.latitude, c.longitude));
+        if(p.d == null || d < p.d) { p.d = d; p.idx = i; }
+        return p;
+    }, { d: null, idx: null });
+
+    return closest.idx; 
+}   
+
 function clearPaths() {
     polylines.forEach(function(p) { p.setMap(null); });
     while(polylines.length > 0) { polylines.pop(); }
 }
 
-function renderPaths() {
+function renderPaths(data) {
+    var first = data[0], last = data[data.length-1];
+    var fromdate = new Date(first.measure_time.replace(/ /,"T"));
+    var fromtime = fromdate.toISOString().match(/\d\d:\d\d:\d\d/);
+    var fromvalue = fromdate.getTime() % (24*60*60*1000) / 1000;
+    var todate = new Date(last.measure_time.replace(/ /,"T"));
+    var tovalue = todate.getTime() % (24*60*60*1000) / 1000;
+    var totime = todate.toISOString().match(/\d\d:\d\d:\d\d/);
+    
+    $("#fromtime").val(fromtime);
+    $("#totime").val(totime);
+    $("#slider").slider("values", [fromvalue, tovalue]);
+
+    if(myLabel.getMap() != map) {
+        map.panTo(new google.maps.LatLng(first.latitude, first.longitude));
+    }
+
     if($("#route").hasClass("enabled")) {
-        renderSpeed();
+        renderMovement(data);
+        renderSpeed(data);
     } else {
-        renderMovement();
+        renderMovement(data);
     }
 }
 
-function renderMovement() {
+function renderMovement(data) {
+    var segments = [];
+    for(var i = 0, len = data.length, step = Math.floor(data.length / Math.min(RENDER_MAXSEGMENTS, data.length)); i < len; i += Math.min(step, len - i)) {
+       segments.push(data.slice(i, i + step + 1 /* overlap with next segment */));
+    }
+
     var colormap = function(n) {
         var colorstep = Math.floor(255 / RENDER_MAXSEGMENTS);
         return "rgb(40," + Math.max(0,255 - colorstep*n) + "," + Math.max(0,colorstep*n) + ")";
     };
 
     clearPaths();
-    pathdata.segments.forEach(function(s) { render(s, colormap); });
+    segments.forEach(function(s) { render(s, colormap); });
 }
 
-function renderSpeed() {
-    var stats = {
-        "total_distance": 0,
-        "total_time": 0
-    };
-    stats.ds_dt = polylines.map(function(p,i) {
-            var s = pathdata.segments[i];
-            var ds = google.maps.geometry.spherical.computeLength(p.getPath());
-            var dt = new Date(s[s.length-1].measure_time) - new Date(s[0].measure_time);
-            stats.total_distance += ds;
-            stats.total_time += dt;
-            return { "i": i, "ds": ds, "dt": dt, "ds_dt": ds/dt };
-        });
-    
+function renderSpeed(data) {
+    var segments = [];
+    for(var i = 0, len = data.length, step = Math.floor(data.length / Math.min(RENDER_MAXSEGMENTS, data.length)); i < len; i += Math.min(step, len - i)) {
+       segments.push(data.slice(i, i + step + 1 /* overlap with next segment */));
+    }
+    var stats = getStats(segments); 
     stats.ds_dt.sort(function(a,b) { return a.ds_dt > b.ds_dt ? 1 : -1; });
 
     stats.ds_dt.forEach(function(o,i,a) { o.ntile = 1.0*i/a.length; });
@@ -297,16 +509,40 @@ function renderSpeed() {
     stats.ds_dt.sort(function(a,b) { return a.i > b.i ? 1 : -1; });
 
     var colormap = function(n) {
-        if(stats.ds_dt[n].ntile < .25) { return "rgb(255,0,0)"; }
-        if(stats.ds_dt[n].ntile < .50) { return "rgb(255,150,0)"; }
-        if(stats.ds_dt[n].ntile < .75) { return "rgb(150,255,0)"; }
-        return "rgb(0,255,0)"; 
+        var s = "rgb(" + parseInt(Math.cos(stats.ds_dt[n].ntile*Math.PI/2)*255, 10) + "," + parseInt(Math.sin(stats.ds_dt[n].ntile*Math.PI/2)*255, 10) + ",0)";
+        return s;
     };
 
     showMessage("Total Distance: " + Math.round(stats.total_distance/1000.0, 2) + "km, Total Time: " + Math.floor(stats.total_time/(60*60*1000)) + "h" + Math.floor(stats.total_time%(60*60*1000)/(60*1000)) + "m", true);
 
     clearPaths();
-    pathdata.segments.forEach(function(s) { render(s, colormap); });
+    segments.forEach(function(s) { render(s, colormap); });
+}
+
+function getStats(segments) {
+
+    var stats = {
+        "total_distance": 0,
+        "total_time": 0
+    };
+
+    stats.ds_dt = polylines.map(function(p,i) {
+            var s = segments[i];
+            var ds = google.maps.geometry.spherical.computeLength(p.getPath());
+
+            var dt = asDate(s[s.length-1].measure_time).getTime() - asDate(s[0].measure_time).getTime();
+
+            stats.total_distance += ds;
+            stats.total_time += dt;
+            return { "i": i, "ds": ds, "dt": dt, "ds_dt": ds/dt };
+        });
+
+    return stats;
+}
+
+function asDate(s) {
+var arr = s.split(/[- :T]/);
+    return new Date(arr[0], arr[1]-1, arr[2], arr[3], arr[4], arr[5]);
 }
 
 function showMessage(m, persist) {
@@ -319,23 +555,21 @@ function showMessage(m, persist) {
  </head>
 
   <body>
-
     <div id="map-canvas"></div>
+    <div id="menubutton"><div class="navicon"></div></div>
     <div id="timerange">
-        <div>
-            <input type="text" id="datepicker"/>
+        <div class="hud hud-top">
+            <input type="text" id="fromdate"/>
+            <div class="linebreak"></div>
             <input type="text" id="fromtime" value="00:00:00" class="time"/> to <input type="text" id="totime" value="23:59:59" class="time" /> GMT
             <button id="route" title="Show Average Speed" class="glyphicon glyphicon-road"></button>
             <div id="slider"></div>
         </div>
     </div>
+    <div id="messages"><div id="status" class="hud hud-bottom"></div></div>
     <select id="device_id">
-       <option value="kpi-1">kpi-1</option>
-       <option value="00000000f2d6e95e">00000000f2d6e95e</option>
-       <option value="kpoc-tca-06">kpoc-tca-06</option> 
-       <option value="0000000084cbd392">0000000084cbd392</option> 
+       <option value="kpi-4">kpi-4</option>
     </select>
-    <div id="messages"><div id="status"></div></div>
 </body>
 </html>
 

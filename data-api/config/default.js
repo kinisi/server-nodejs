@@ -2,7 +2,7 @@ module.exports = {
     "port": 5674,
     "mysql": {
         "conn": {
-            "host": "10.176.129.21",
+            "host": "ai1dev1",
             "user": "kuser0",
             "password": "9aad1067f476ba",
             "database": "kdev1",
@@ -12,5 +12,11 @@ module.exports = {
     "static": {
         "defaultIndexPath": "/testmap.html",
         "basepath": __dirname + "/../static"
+    },
+    "tablequery": {
+        "whitelist": [
+            "device_location",
+            "v_device_location"
+        ]
     }
 }

@@ -2,11 +2,9 @@ var path = require("path");
 var db = require("../db");
 var queryparser = require("../queryparser");
 var rutil = require("../router_util");
+var config = require("config");
 
-// TODO: Figure out how to inject this configuration:
-var whitelist = [
-    "device_location"
-];
+var whitelist = config.tablequery.whitelist;
 
 var defaults = {
     "limit": 1000,

@@ -3,18 +3,19 @@
   <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
-    <title>Simple Visualizer</title>
-    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" rel="stylesheet">
+    <title>Simple Visualizer - OSM</title>
+    <link href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
     <style>
 
       html, body, #map-canvas {
         height: 100%;
         margin: 0px;
-        padding: 0px
+        padding: 0px;
     }
 
     #messages {
+        z-index: 2;
         position: absolute;
         bottom: 0px;
         left: 0px;
@@ -22,49 +23,75 @@
         display: none;
     }
 
-    #status {
-        font-family: Calibri;
-        position: relative;
-        background-color: rgba(255,255,255,0.75);
-        margin: auto;
-        width: 600px;
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
-        padding: 12px;
-        text-align: center;
-    }
-
     #timerange {
+        z-index: 2;
         position: absolute;
         top: 0px;
         left: 0px;
         width: 100%;
+        height: 0px;
     }
 
-    #timerange>div {
-        font-family: Calibri;
-        position: relative;
+    #device_id {
+        display: none;
+        position: absolute;
+        bottom: 15px;
+        right: 5px;
+    }
+
+    #menubutton {
+       z-index: 1000;
+       position: absolute;
+       top: 5px;
+       right: 5px;
+       border: 1px solid gray;
+       border-radius: 5px;
+       
+       background-color: rgba(255,255,255,0.75);
+    }
+
+    .navicon {
+	height: 15px;
+	width: 24px;
+	margin: 8px;
+	border-top: 9px double #000;
+	border-bottom: 3px solid #000;
+    }
+
+    .hud {
+        font-family: Futura,Calibri,sans-serif;
         background-color: rgba(255,255,255,0.75);
-        margin: auto;
-        width: 360px;
-        border-bottom-left-radius: 10px;
-        border-bottom-right-radius: 10px;
+        width: 100%;
         padding: 12px;
         text-align: center;
     }
 
-    #datepicker {
+    @media (min-width:600px) {
+	.navicon { display: none; }
+        .hud { 
+            margin: auto;
+            position: relative;
+            width: 600px; 
+        }
+        .hud-top {
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+	}
+        .hud-bottom {
+            border-top-left-radius: 10px; 
+            border-top-right-radius: 10px;
+	}
+        .linebreak {
+            display: none; 
+        }
+    }
+
+    #fromdate {
         border: 0px;
         background: transparent;
         font-size: 20px;
-        font-family: Calibri;
-        width: 100px;
-    }
-
-    #device_id {
-        position: absolute;
-        top: 5px;
-        right: 100px;
+        font-family: Futura,Calibri,sans-serif;
+        width: 124px;
     }
 
     #route {
@@ -84,13 +111,13 @@
         border: 0px;
         background: transparent;
         font-size: 14px; 
-        font-family: Calibri;
-        width: 60px;
+        font-family: Futura,Calibri,sans-serif;
+        width: 80px;
         text-align: center;
     }
 
     .ui-widget {
-        font-family: Calibri;
+        font-family: Futura,Calibri,sans-serif;
         font-size: 1em;
     }
     .ui-slider-horizontal {
@@ -117,12 +144,30 @@
     .slider {
         height: 10px;
     }
+    
+    .mapLabel {
+        position: absolute;
+        display: none;
+        background-color: rgba(255,255,255,0.9);
+        padding: 4px;
+        border-radius: 0px 10px 10px 10px;
+        cursor: default;
+    }
+    
+    .mapLabel span {
+        position: relative;
+        padding: 10px; 
+        font-familiy: Futura,Calibri,sans-serif;
+    }
+    
+    .mapLabel pre {
+        white-space: pre;
+    }
   </style>
-
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
-<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
-<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
 <script src="js/leaflet.geometryutil.js"></script> 
 
     <script type="text/javascript">
@@ -131,26 +176,33 @@ var map = null;
 var polylines = [];
 var pathdata = [];
 var queryTimer = null;
-var QUERY_LIMIT=5000;
+var QUERY_LIMIT=17280;
 var RENDER_MAXSEGMENTS = 50;
 
 $(document).ready(function(){ initialize(); });
 
 function initialize() {
+    var qs = location.search.slice(1).split("&").reduce(function(p,c) { c.split("=").every(function(k,i,a) { p[k] = a[i+1]; }); return p; }, {});
+ 
+    for(var s in qs) {
+        $("#" + s).val(qs[s]);
+    }
 
     // From: http://switch2osm.org/using-tiles/getting-started-with-leaflet/
     // set up the map
     map = new L.Map('map-canvas');
 
     // create the tile layer with correct attribution
-    var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    var osmUrl='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
     var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
     var osm = new L.TileLayer(osmUrl, {minZoom: 8, maxZoom: 18, attribution: osmAttrib});		
 
-        $('#map-canvas').show();
+    $('#map-canvas').show();
     // start the map in New York
     map.setView(new L.LatLng(40.7127, -74.0059),14);
     map.addLayer(osm);
+
+    $("#menubutton").click(function() { $("#timerange").toggle(); });
 
     $("#slider").slider({
         range: true,
@@ -159,7 +211,7 @@ function initialize() {
         values: [ 0 , 24*60*60-1 ],
         step: 1,
         slide: function(event, ui) {
-            var date = new Date($("#datepicker").val()).getTime();
+            var date = new Date($("#fromdate").val()).getTime();
             var fromtime = new Date(date+(ui.values[0]*1000)).toISOString().match(/\d\d:\d\d:\d\d/);
             var totime = new Date(date+(ui.values[1]*1000-1)).toISOString().match(/\d\d:\d\d:\d\d/);
             $("#fromtime").val(fromtime);
@@ -168,7 +220,7 @@ function initialize() {
         }
     });
 
-    $("#datepicker").datepicker({
+    $("#fromdate").datepicker({
         dateFormat: "yy-mm-dd",
         onSelect: function(dt) {
             $("#slider").slider("values", [ 0 , 24*60*60-1 ])
@@ -176,13 +228,13 @@ function initialize() {
             $("#totime").val("23:59:59");
             queryData();
         }
-    }).datepicker("setDate", "2014-04-28");
-
+    }).datepicker("setDate", qs.fromdate || "2014-07-02");
+    
     $("#fromtime, #totime").keyup(function(e) {
         if(e.keyCode == 13) {
-            var date = new Date($("#datepicker").val()).getTime();
-            var fromvalue = (new Date($("#datepicker").val() + "T" + $("#fromtime").val()).getTime() - date) / 1000;
-            var tovalue = (new Date($("#datepicker").val() + "T" + $("#totime").val()).getTime() - date) / 1000;
+            var date = new Date($("#fromdate").val()).getTime();
+            var fromvalue = (new Date($("#fromdate").val() + "T" + $("#fromtime").val()).getTime() - date) / 1000;
+            var tovalue = (new Date($("#fromdate").val() + "T" + $("#totime").val()).getTime() - date) / 1000;
             $("#slider").slider("values", [fromvalue, tovalue] );
             queryData();
         }
@@ -200,7 +252,7 @@ function queryData() {
     if(!queryTimer) {
         queryTimer = setTimeout(function() { 
             var device_id = $("#device_id").val();
-            var date = $("#datepicker").val();
+            var date = $("#fromdate").val();
             var fromtime = $("#fromtime").val();
             var totime = $("#totime").val();
 
@@ -249,13 +301,13 @@ function loadKinisiData(data) {
 
 function render(data, colormap) {
     var color = ((colormap instanceof Function) ? colormap(polylines.length) : colormap[polylines.length]);
-    var path = new L.polyline(data.map(function(d) { return new L.latLng(d.latitude, d.longitude); }), {color: color, opacity: 1.0, weight: 2});
+    var path = new L.polyline(data.map(function(d) { return new L.latLng(d.latitude, d.longitude); }), {color: color, opacity: 1.0, weight: 4});
     polylines.push(path);
     path.addTo(map);
 }
 
 function clearPaths() {
-    //polylines.forEach(function(p) { p.setMap(null); });
+    polylines.forEach(function(p) { map.removeLayer(p); });
     while(polylines.length > 0) { polylines.pop(); }
 }
 
@@ -320,23 +372,22 @@ function showMessage(m, persist) {
  </head>
 
   <body>
-
     <div id="map-canvas"></div>
+    <div id="menubutton"><div class="navicon"></div></div>
     <div id="timerange">
-        <div>
-            <input type="text" id="datepicker"/>
+        <div class="hud hud-top">
+            <input type="text" id="fromdate"/>
+            <div class="linebreak"></div>
             <input type="text" id="fromtime" value="00:00:00" class="time"/> to <input type="text" id="totime" value="23:59:59" class="time" /> GMT
             <button id="route" title="Show Average Speed" class="glyphicon glyphicon-road"></button>
             <div id="slider"></div>
         </div>
     </div>
+    <div id="messages"><div id="status" class="hud hud-bottom"></div></div>
     <select id="device_id">
        <option value="kpi-1">kpi-1</option>
-       <option value="00000000f2d6e95e">00000000f2d6e95e</option>
-       <option value="kpoc-tca-06">kpoc-tca-06</option> 
-       <option value="0000000084cbd392">0000000084cbd392</option> 
     </select>
-    <div id="messages"><div id="status"></div></div>
 </body>
+
 </html>
 
