@@ -12,7 +12,10 @@
     },
     "dependencies": {
         "config": "*",
-        "mysql": "*"
+        "mysql": "*",
+        "express": "3.4.0",
+        "passport": "0.1.17",
+        "passport-google-oauth": "0.1.5"
     },
     "license": "Copyright 2014 Kinisi"
 }

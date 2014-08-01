@@ -179,6 +179,9 @@ var queryTimer = null;
 var QUERY_LIMIT=17280;
 var RENDER_MAXSEGMENTS = 50;
 
+var userid = null;
+var oauth_token = null;
+
 $(document).ready(function(){ initialize(); });
 
 function initialize() {
@@ -187,6 +190,9 @@ function initialize() {
     for(var s in qs) {
         $("#" + s).val(qs[s]);
     }
+
+    oauth_token = qs['token'];
+    userid = qs['userid'];
 
     // From: http://switch2osm.org/using-tiles/getting-started-with-leaflet/
     // set up the map
@@ -256,7 +262,7 @@ function queryData() {
             var fromtime = $("#fromtime").val();
             var totime = $("#totime").val();
 
-            var url = "/table/device_location?api_token=N9yCFXqDJvg6&c=measure_time,latitude,longitude&f=latitude|ne|0;measure_time|gte|" + date+"T"+fromtime + ";measure_time|lt|" + date+"T"+totime + ";device_id|eq|" + device_id + "&o=measure_time&limit=" + QUERY_LIMIT;
+            var url = "/table/device_location?oauth_token=" + oauth_token + "&userid=" + userid + "&c=measure_time,latitude,longitude&f=latitude|ne|0;measure_time|gte|" + date+"T"+fromtime + ";measure_time|lt|" + date+"T"+totime + ";device_id|eq|" + device_id + "&o=measure_time&limit=" + QUERY_LIMIT;
 
             $.getJSON(url, loadKinisiData).complete(function() { queryTimer = null; });
         }, 1000);
