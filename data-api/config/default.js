@@ -16,7 +16,8 @@ module.exports = {
     "tablequery": {
         "whitelist": [
             "device_location",
-            "v_device_location"
+            "v_device_location",
+            "device_configuration"
         ]
     }
 }

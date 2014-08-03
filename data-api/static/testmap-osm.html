@@ -33,9 +33,9 @@
     }
 
     #device_id {
-        display: none;
+        display: inline;
         position: absolute;
-        bottom: 15px;
+        bottom: 20px;
         right: 5px;
     }
 
@@ -176,6 +176,8 @@ var map = null;
 var polylines = [];
 var pathdata = [];
 var queryTimer = null;
+var optionTimer = null;
+var optionDone = false;
 var QUERY_LIMIT=17280;
 var RENDER_MAXSEGMENTS = 50;
 
@@ -194,6 +196,8 @@ function initialize() {
     oauth_token = qs['token'];
     userid = qs['userid'];
 
+    queryOption();
+
     // From: http://switch2osm.org/using-tiles/getting-started-with-leaflet/
     // set up the map
     map = new L.Map('map-canvas');
@@ -209,6 +213,10 @@ function initialize() {
     map.addLayer(osm);
 
     $("#menubutton").click(function() { $("#timerange").toggle(); });
+
+    $("#device_id").change(function() {
+        queryData();
+    });
 
     $("#slider").slider({
         range: true,
@@ -255,6 +263,9 @@ function initialize() {
 }
 
 function queryData() {
+    if(!optionDone) {
+        return;
+    }
     if(!queryTimer) {
         queryTimer = setTimeout(function() { 
             var device_id = $("#device_id").val();
@@ -303,6 +314,29 @@ function loadKinisiData(data) {
     map.setView(new L.latLng(first.latitude, first.longitude));
 
     renderPaths();
+}
+
+function queryOption() { 
+    if(!optionTimer) {
+        optionTimer = setTimeout(function() { 
+            var url = "/table/device_configuration?oauth_token=" + oauth_token + "&userid=" + userid + "&c=api_token_id,device_id&f=api_token_id|eq|" + userid + "&o=device_id&limit=" + QUERY_LIMIT;
+
+            $.getJSON(url, setDeviceIDs).complete(function() { optionTimer = null; optionDone = true; queryData(); });
+        }, 1000);
+    }
+}
+
+function setDeviceIDs(data) {
+    console.log(data);
+    // From http://stackoverflow.com/questions/1502649/jquery-getjson-populate-select-menu-question/1502674#1502674
+    var html = '';
+    var len = data.length;
+    for (var i = 0; i< len; i++) {
+        html += '<option value="' + data[i].device_id + '">' + data[i].device_id + '</option>';
+    }
+    console.log(html);
+    $('#device_id').append(html);
+
 }
 
 function render(data, colormap) {
@@ -391,7 +425,6 @@ function showMessage(m, persist) {
     </div>
     <div id="messages"><div id="status" class="hud hud-bottom"></div></div>
     <select id="device_id">
-       <option value="kpi-1">kpi-1</option>
     </select>
 </body>
 
