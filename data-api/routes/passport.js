@@ -3,7 +3,6 @@ var router = require("../lib/router");
 //var auth = require("../lib/middleware/auth");
 //var tablequery = require("../lib/middleware/tablequery");
 var AuthHandler = require("../lib/middleware/AuthHandler");
-var logger = require("../lib/logger");
 
 //        app.get('/auth/google',handlers.auth.googleSignIn);
 //        app.get('/auth/google/callback',handlers.auth.googleSignInCallback);
@@ -19,13 +18,11 @@ var google_strategy = require('passport-google-oauth').OAuth2Strategy;
 var db = require("../lib/db");
 
 var saveToken = function(email, accessToken, callback) {
-    logger.log('saveToken called', email, accessToken);
     db.query("insert into oauth_token (user_id, oauth_service, oauth_token, oauth_expires) select id, 'google', ?, date_add(now(), interval 1 hour) from api_token where email = ?",
         [accessToken, email],
         function(err, rows, fields) {
             callback(err);
         });
-    logger.log('saveToken done', email, accessToken);
 };
 
 passport.use(new google_strategy({
@@ -34,7 +31,6 @@ passport.use(new google_strategy({
     callbackURL: 'https://maps.kinisi.cc/auth/google/callback'
 },
 function(accessToken, refreshToken, profile, done) {
-    logger.log('Passport callback');
     saveToken(profile._json.email, accessToken, function(err) {
         done(err, { "token": accessToken, "profile": profile });
     });
