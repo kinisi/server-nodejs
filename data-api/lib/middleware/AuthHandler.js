@@ -16,15 +16,16 @@ module.exports.googleSignInCallback = function googleSignInCallback(req, res, ne
 			return next(err);
 		}
 
-        var body = "<pre>" + JSON.stringify(user,null,"\t") + "\n" + JSON.stringify(info,null,"\t") + "</pre>";
-
+        // From: http://stackoverflow.com/questions/11355366/nodejs-redirect-url
         db.query("SELECT id, oauth_token FROM api_token a JOIN oauth_token o ON a.id = o.user_id WHERE o.oauth_token = ? and o.oauth_service = 'google'", [user.token], function(err, rows, fields) { 
-        
-        body += "<div><a href=\"/user/" + rows[0].id + "?token=" + rows[0].oauth_token + "\">This is your user record</a></div>";
-        body += "<div><a href=\"/static/testmap-osm.html?userid=" + rows[0].id + "&token=" + rows[0].oauth_token + "\">This is your map</a></div>";
+            //var userrecord = "/user/" + rows[0].id + "?token=" + rows[0].oauth_token;
+            var map = "/static/testmap-osm.html?userid=" + rows[0].id + "&token=" + rows[0].oauth_token;
+            res.writeHead(301, {
+                'Location': (req.socket.encrypted ? 'https://' : 'http://') +
+                req.headers.host + map}
+            );
 
-        res.writeHead(200, { "Content-Type": "text/html", "Content-Length": body.length });
-        res.end(body);
+            res.end();
         });
 	})(req,res,next);
 };

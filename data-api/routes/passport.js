@@ -8,8 +8,9 @@ var AuthHandler = require("../lib/middleware/AuthHandler");
 //        app.get('/auth/google/callback',handlers.auth.googleSignInCallback);
 
 //router.add("GET", /\/table\//, auth, tablequery, rutil.writeCORSHeaders, rutil.writeJSONPBody);
-router.add("GET", /\/auth\/google\/callback/, AuthHandler.googleSignInCallback);
-router.add("GET", /\/auth\/google/, AuthHandler.googleSignIn);
+router.add("GET", /^\/auth\/google\/callback/, AuthHandler.googleSignInCallback);
+router.add("GET", /^\/auth\/google/, AuthHandler.googleSignIn);
+router.add("GET", /^\/$/, AuthHandler.googleSignIn);
 
 var passport = require('passport');
 
