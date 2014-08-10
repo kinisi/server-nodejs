@@ -19,7 +19,12 @@ module.exports.googleSignInCallback = function googleSignInCallback(req, res, ne
         // From: http://stackoverflow.com/questions/11355366/nodejs-redirect-url
         db.query("SELECT id, oauth_token FROM api_token a JOIN oauth_token o ON a.id = o.user_id WHERE o.oauth_token = ? and o.oauth_service = 'google'", [user.token], function(err, rows, fields) { 
             //var userrecord = "/user/" + rows[0].id + "?token=" + rows[0].oauth_token;
-            var map = "/static/testmap-osm.html?userid=" + rows[0].id + "&token=" + rows[0].oauth_token;
+            var map = "/static/testmap-osm.html";
+            try {
+               map = "/static/testmap-osm.html?userid=" + rows[0].id + "&token=" + rows[0].oauth_token;
+            } catch (err) {
+               // do nothing
+            }
             res.writeHead(301, {
                 'Location': (req.socket.encrypted ? 'https://' : 'http://') +
                 req.headers.host + map}
