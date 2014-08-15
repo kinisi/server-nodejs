@@ -169,6 +169,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
 <script src="js/leaflet.geometryutil.js"></script> 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.7.0/moment.min.js"></script>
 
     <script type="text/javascript">
 
@@ -242,7 +243,7 @@ function initialize() {
             $("#totime").val("23:59:59");
             queryData();
         }
-    }).datepicker("setDate", qs.fromdate || "2014-07-02");
+    }).datepicker("setDate", qs.fromdate || moment().format("YYYY-MM-DD"));
     
     $("#fromtime, #totime").keyup(function(e) {
         if(e.keyCode == 13) {
