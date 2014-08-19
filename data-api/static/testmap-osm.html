@@ -179,6 +179,8 @@ var pathdata = [];
 var queryTimer = null;
 var optionTimer = null;
 var optionDone = false;
+var dateTimer = null;
+var dateDone = false;
 var QUERY_LIMIT=17280;
 var RENDER_MAXSEGMENTS = 50;
 
@@ -216,7 +218,8 @@ function initialize() {
     $("#menubutton").click(function() { $("#timerange").toggle(); });
 
     $("#device_id").change(function() {
-        queryData();
+        // queryDate calls queryData
+        queryDate();
     });
 
     $("#slider").slider({
@@ -260,11 +263,12 @@ function initialize() {
         renderPaths();
     });
 
-    queryData();
+    // queryOption -> queryDate -> queryData now.
+    //queryData();
 }
 
 function queryData() {
-    if(!optionDone) {
+    if(!optionDone && !dateDone) {
         return;
     }
     if(!queryTimer) {
@@ -317,25 +321,41 @@ function loadKinisiData(data) {
     renderPaths();
 }
 
+function queryDate() { 
+    if(!dateTimer) {
+        dateTimer = setTimeout(function() { 
+            var url = "/table/device_location?oauth_token=" + oauth_token + "&userid=" + userid + "&c=measure_time&f=device_id|eq|" + $("#device_id").val() + "&o=measure_time%20desc&limit=1";
+
+            $.getJSON(url, setMostRecentDate).complete(function() { dateTimer = null; dateDone = true; queryData(); });
+        }, 1000);
+    }
+}
+
 function queryOption() { 
     if(!optionTimer) {
         optionTimer = setTimeout(function() { 
             var url = "/table/device_configuration?oauth_token=" + oauth_token + "&userid=" + userid + "&c=api_token_id,device_id&f=api_token_id|eq|" + userid + "&o=device_id&limit=" + QUERY_LIMIT;
 
-            $.getJSON(url, setDeviceIDs).complete(function() { optionTimer = null; optionDone = true; queryData(); });
+            $.getJSON(url, setDeviceIDs).complete(function() { optionTimer = null; optionDone = true; queryDate(); });
         }, 1000);
     }
 }
 
+function setMostRecentDate(data) {
+    if (data && (data.length > 0) && ("measure_time" in data[0])) {
+      $("#fromdate").datepicker("setDate", data[0].measure_time.match(/\d\d\d\d-\d\d-\d\d/)[0]);
+    } else {
+      $("#fromdate").datepicker("setDate", moment().format("YYYY-MM-DD"));
+    }
+}
+
 function setDeviceIDs(data) {
-    console.log(data);
     // From http://stackoverflow.com/questions/1502649/jquery-getjson-populate-select-menu-question/1502674#1502674
     var html = '';
     var len = data.length;
     for (var i = 0; i< len; i++) {
         html += '<option value="' + data[i].device_id + '">' + data[i].device_id + '</option>';
     }
-    console.log(html);
     $('#device_id').append(html);
 
 }
