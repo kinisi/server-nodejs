@@ -2,7 +2,7 @@ module.exports = {
     "port": 5674,
     "mysql": {
         "conn": {
-            "host": "ai1dev1.kinisi.cc",
+            "host": "ai1dev2.kinisi.cc",
             "user": "kadm",
             "password": "5ad50dcdc887b2",
             "database": "kdev1",
