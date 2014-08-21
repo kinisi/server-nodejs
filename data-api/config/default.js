@@ -17,7 +17,8 @@ module.exports = {
         "whitelist": [
             "device_location",
             "v_device_location",
-            "device_configuration"
+            "device_configuration",
+            "device_interface"
         ]
     }
 }
