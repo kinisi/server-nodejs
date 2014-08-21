@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Kinisi Dashboard</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+
+    <script type="text/javascript">
+
+$(document).ready(function(){ initialize(); });
+
+var oauth_token = null;
+var userid = null;
+
+function initialize() {
+    var qs = location.search.slice(1).split("&").reduce(function(p,c) { c.split("=").every(function(k,i,a) { p[k] = a[i+1]; }); return p; }, {});
+
+    oauth_token = qs['token'];
+    userid = qs['userid'];
+
+    var to = setTimeout(function() {
+
+      var url = "/table/device_configuration?oauth_token=" + oauth_token + "&userid=" + userid + "&c=api_token_id,device_id&f=api_token_id|eq|" + userid + "&o=device_id&limit=100"; // + QUERY_LIMIT;
+
+      $.getJSON(url, function(data) { $("#loading").hide(); make_device_table(data); }).complete(function() { to = null; });
+    }, 1000);
+
+}
+
+function make_device_table(data) {
+    $('<tr>').append(
+        $('<td>').text('Device ID (view map)'),
+        $('<td>').text('Last Measurement'),
+        $('<td>').text('Last Receive')
+    ).appendTo('#device_table');
+
+    $.each(data, function(i, item) {
+        var $tr = $('<tr>').append(
+            $('<td>').append($('<a>').prop({'href':'/static/testmap-osm.html?userid='+userid+'&token='+oauth_token+'&device_id='+item.device_id}).text(item.device_id)),
+            $('<td>').prop({'id': item.device_id+'_measure'}),
+            $('<td>').prop({'id': item.device_id+'_receive'})
+        ).appendTo('#device_table');
+    });
+
+    $.each(data, function(i, item) {
+        var url = "/table/device_location?oauth_token=" + oauth_token + "&userid=" + userid + "&c=measure_time&f=device_id|eq|" + item.device_id + "&o=measure_time%20desc&limit=1";
+        $.getJSON(url, function(data) {
+            var cell_text;
+            if (data && data[0] && ("measure_time" in data[0])) {
+                cell_text = data[0].measure_time;
+            } else {
+                cell_text = "No data";
+            }
+            $('#'+item.device_id+'_measure').text(cell_text);
+        }).complete(function() {});
+    });
+
+    $.each(data, function(i, item) {
+        var url = "/table/device_location?oauth_token=" + oauth_token + "&userid=" + userid + "&c=receive_time&f=device_id|eq|" + item.device_id + "&o=receive_time%20desc&limit=1";
+        $.getJSON(url, function(data) {
+            var cell_text;
+            if (data && data[0] && ("receive_time" in data[0])) {
+                cell_text = data[0].receive_time;
+            } else {
+                cell_text = "No data";
+            }
+            $('#'+item.device_id+'_receive').text(cell_text);
+        }).complete(function() {});
+    });
+}
+
+    </script>
+
+  </head>
+  <body>
+
+    <div id="top">Kinisi Dashboard</div>
+    <div id="loading">Devices list now loading.</div>
+    <div id="device_table"></div>
+
+  </body>
+</html>

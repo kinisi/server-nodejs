@@ -186,6 +186,7 @@ var RENDER_MAXSEGMENTS = 50;
 
 var userid = null;
 var oauth_token = null;
+var req_device_id = null;
 
 $(document).ready(function(){ initialize(); });
 
@@ -198,6 +199,7 @@ function initialize() {
 
     oauth_token = qs['token'];
     userid = qs['userid'];
+    req_device_id = qs['device_id'];
 
     queryOption();
 
@@ -354,7 +356,8 @@ function setDeviceIDs(data) {
     var html = '';
     var len = data.length;
     for (var i = 0; i< len; i++) {
-        html += '<option value="' + data[i].device_id + '">' + data[i].device_id + '</option>';
+        var selected = (req_device_id && (req_device_id == data[i].device_id)) ? " selected " : "";
+        html += '<option value="' + data[i].device_id + '"' + selected + '>' + data[i].device_id + '</option>';
     }
     $('#device_id').append(html);
 
