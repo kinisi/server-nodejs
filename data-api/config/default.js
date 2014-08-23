@@ -1,3 +1,5 @@
+var path = require('path');
+
 module.exports = {
     "port": 5674,
     "mysql": {
@@ -11,7 +13,7 @@ module.exports = {
     },
     "static": {
         "defaultIndexPath": "/testmap.html",
-        "basepath": __dirname + "/../static"
+        "basepath": path.resolve(__dirname + "/../static")
     },
     "tablequery": {
         "whitelist": [
@@ -20,5 +22,8 @@ module.exports = {
             "device_configuration",
             "device_interface"
         ]
-    }
+    },
+    "download": {
+        "basepath": path.resolve(__dirname + "/../downloads")
+   }
 }

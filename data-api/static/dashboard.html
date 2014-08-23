@@ -20,6 +20,8 @@ function initialize() {
     oauth_token = qs['token'];
     userid = qs['userid'];
 
+    $('#image_download').append($('<a>').prop({'href':'/download/rpi-image?userid='+userid+'&oauth_token='+oauth_token}).text('Download your rPi image here'));
+
     var to = setTimeout(function() {
 
       var url = "/table/device_configuration?oauth_token=" + oauth_token + "&userid=" + userid + "&c=api_token_id,device_id&f=api_token_id|eq|" + userid + "&o=device_id&limit=100"; // + QUERY_LIMIT;
@@ -107,6 +109,7 @@ function make_device_table(data) {
   <body>
 
     <div id="top">Kinisi Dashboard</div>
+    <div id="image_download"></div>
     <div id="loading">Devices list now loading.</div>
     <div id="device_table"></div>
 
