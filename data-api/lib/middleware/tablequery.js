@@ -21,7 +21,7 @@ module.exports = function tableQuery(req, res, next) {
 
     if(whitelist.indexOf(tablename) > -1) {
         var sql = queryparser.template("select {{select}} from " + tablename + 
-                  " {{where}} {{order by}} limit " + limit + " offset " + offset, ctx.url.query);
+                  " {{where}} {{group by}} {{order by}} limit " + limit + " offset " + offset, ctx.url.query);
         db.query(sql, function(err, results) {
             // save results for the next handler:
             ctx.body = JSON.stringify(results);

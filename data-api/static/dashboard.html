@@ -36,6 +36,7 @@ function make_device_table(data) {
         $('<td>').text('Device ID (view map)'),
         $('<td>').text('Last Measurement'),
         $('<td>').text('Last Receive'),
+        $('<td>').text('Num Loc Entries'),
         $('<td>').text('MAC wlan'),
         $('<td>').text('MAC eth')
     ).appendTo('#device_table');
@@ -45,6 +46,7 @@ function make_device_table(data) {
             $('<td>').append($('<a>').prop({'href':'/static/testmap-osm.html?userid='+userid+'&token='+oauth_token+'&device_id='+item.device_id}).text(item.device_id)),
             $('<td>').prop({'id': item.device_id+'_measure'}),
             $('<td>').prop({'id': item.device_id+'_receive'}),
+            $('<td>').prop({'id': item.device_id+'_entries'}),
             $('<td>').prop({'id': item.device_id+'_wlan'}),
             $('<td>').prop({'id': item.device_id+'_eth'})
         ).appendTo('#device_table');
@@ -73,6 +75,20 @@ function make_device_table(data) {
                 cell_text = "No data";
             }
             $('#'+item.device_id+'_receive').text(cell_text);
+        }).complete(function() {});
+    });
+
+    $.each(data, function(i, item) {
+        //var url = "/table/device_interface?oauth_token=" + oauth_token + "&userid=" + userid + "&c=address&f=device_id|eq|" + item.device_id + ";name|like|eth&o=address&limit=1";
+        var url = "/table/device_location?oauth_token=" + oauth_token + "&userid=" + userid + "&f=device_id|eq|" + item.device_id + ";latitude|nnull;longitude|nnull&G=count|device_id";
+        $.getJSON(url, function(data) {
+            var cell_text;
+            if (data && data[0] && ("count(device_id)" in data[0])) {
+                cell_text = data[0]["count(device_id)"];
+            } else {
+                cell_text = "No data";
+            }
+            $('#'+item.device_id+'_entries').text(cell_text);
         }).complete(function() {});
     });
 
