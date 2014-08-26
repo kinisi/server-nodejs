@@ -12,7 +12,22 @@ var defaults = {
     "offset": 0
 };
 
+var is_proxy = process.env.NODE_ENV != "download";
+if ( is_proxy ) {
+    var httpProxy = require('http-proxy');
+    var proxy = httpProxy.createProxyServer({localAddress: "10.176.168.147"});
+} else {
+    var httpProxy = null;
+    var proxy = null;
+}
+
 module.exports = function tableQuery(req, res, next) {
+
+    if (is_proxy) {
+        proxy.proxyRequest(req, res, { target: 'http://10.176.160.64:5674' } );
+        return;
+    }
+
     var ctx = this;
 
     logger.log(ctx);
