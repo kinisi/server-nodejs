@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="utf-8">
     <title>Kinisi Dashboard</title>
+    <link rel="stylesheet" href="css/dashboard.css" media="all">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
 
+    <!-- Latest compiled and minified JavaScript -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 
     <script type="text/javascript">
@@ -121,13 +126,14 @@ function make_device_table(data) {
 
     </script>
 
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
   </head>
-  <body>
+  <body class="container-fluid">
 
     <div id="top">Kinisi Dashboard</div>
     <div id="image_download"></div>
     <div id="loading">Devices list now loading.</div>
-    <div id="device_table"></div>
+    <table class="table" id="device_table"></table>
 
   </body>
 </html>
