@@ -13,15 +13,15 @@ var FormatPicker = React.createClass({
             <div className="col-sm-1"><label>Format</label></div>
             <div className="col-sm-11">
             <div className="btn-group" data-toggle="buttons">
-                <label className="btn btn-default active">
+                <button className="btn btn-default active">
                     <input type="radio" name="format" value="csv" defaultChecked /> CSV
-                </label>
-                <label className="btn btn-default">
+                </button>
+                <button className="btn btn-default">
                     <input type="radio" name="format" value="kml" /> KML
-                </label>
-                <label className="btn btn-default">
+                </button>
+                <button className="btn btn-default">
                     <input type="radio" name="format" value="json" /> JSON
-                </label>
+                </button>
             </div></div>
         </div></div>;
     }
@@ -29,35 +29,53 @@ var FormatPicker = React.createClass({
 
 var DatePicker = React.createClass({
 
-    getIntialState: function() {
-        return { rangeOption: "1 day" };
+    from: function() {
+        return $( "#" + this.props.name + "_from", this.getDOMNode() );
+    },
+
+    to: function() {
+        return $( "#" + this.props.name + "_to", this.getDOMNode() ); 
+    },
+
+    getInitialState: function() {
+        return { rangeOption: "1 days" };
     },
 
     componentDidMount: function() {
-        var component = this,
-            from = "#" + this.props.name + "-from",
-            to = "#" + this.props.name + "-to",
-            node = this.getDOMNode();
+        var from = this.from(),
+            to = this.to();
 
-        $('.btn', node).button();
+        $('.btn', this.getDOMNode()).button();
 
-        $(from, node).datepicker({
+        from.datepicker({
+            dateFormat: "yy-mm-dd",
             defaultDate: "-1d",
+            disabled: true,
             changeMonth: true,
+            changeYear: true,
             numberOfMonths: 1,
-            onClose: function( selectedDate ) {
-                $(to, node).datepicker( "option", "minDate", selectedDate);
+            onClose: function(selectedDate) {
+                to.datepicker("option", "minDate", selectedDate);
             }
         });
 
-        $(to, node).datepicker({
-            defaultDate: "today",
+        to.datepicker({
+            dateFormat: "yy-mm-dd",
+            defaultDate: null,
+            disabled: true,
             changeMonth: true,
+            changeYear: true,
             numberOfMonths: 1,
-            onClose: function( selectedDate ) {
-                $(from, node).datepicker( "option", "maxDate", selectedDate);
+            showButtonPanel: true,
+            onClose: function(selectedDate) {
+                from.datepicker("option", "maxDate", selectedDate);
             }
         });
+    },
+
+    componentWillUnmount: function() {      
+        this.from().datepicker("destroy");
+        this.to().datepicker("destroy");
     },
 
     render: function() {
@@ -67,31 +85,50 @@ var DatePicker = React.createClass({
                     <label>Presets</label>
                 </div>
                 <div className="btn-group col-sm-11" data-toggle="buttons">
-                    <label className="btn btn-default active">
-                        <input type="radio" name="range_opt" value="1 day" defaultChecked />1 day
-                    </label>
-                    <label className="btn btn-default">
+                    <button className="btn btn-default active"  onClick={this.handleClick} >
+                        <input type="radio" name="range_opt" value="1 days" defaultChecked />1 day
+                    </button>
+                    <button className="btn btn-default"  onClick={this.handleClick} >
                         <input type="radio" name="range_opt" value="7 days"/>7 days
-                    </label>
-                    <label className="btn btn-default">
+                    </button>
+                    <button className="btn btn-default"  onClick={this.handleClick} >
                         <input type="radio" name="range_opt" value="30 days"/>30 days
-                    </label>
-                    <label className="btn btn-default">
+                    </button>
+                    <button className="btn btn-default"  onClick={this.handleClick} >
                         <input type="radio" name="range_opt" value="custom"/>Custom
-                    </label>
+                    </button>
                 </div>
             </div>
 
             <div className="row">
                 <div className="col-sm-11">
-                    <label>From <input type="text" id={this.props.name + "-from"} name="from" className="form-control" />
+                    <label>From <input type="text" id={this.props.name + "_from"} name="from" className="form-control" />
                     </label>
-                    <label>to <input type="text" id={this.props.name + "-to"} name="to" className="form-control" />
+                    <label>to <input type="text" id={this.props.name + "_to"} name="to" className="form-control" />
                     </label>
                 </div>
             </div>
 
             </div>;
+    },
+
+    handleClick: function(e) {
+        var newValue = e.currentTarget.querySelector('input').value;
+        this.setState( {rangeOption: newValue}, function(){
+
+            var disabled = this.state.rangeOption !== "custom",
+                node = this.getDOMNode(),
+                fromDate = moment().subtract(this.state.rangeOption.split(' ')[0], 'days').format("YYYY-MM-DD");
+                toDate = moment().format("YYYY-MM-DD");
+
+                console.log(fromDate, toDate);
+                
+                this.from().datepicker("option", { "disabled": disabled, "setDate": fromDate });
+                this.to().datepicker("option", { "disabled": disabled, "setDate": toDate});
+            
+
+                
+        });
     }
 });
 
@@ -105,11 +142,11 @@ var ExportForm = React.createClass({
     },
 
     render: function() {
-        return <form className="k-export-form panel panel-default" id={this.props.id} onSubmit={this.handleSubmit}>
+        return <form className="k-export-form panel panel-default" onSubmit={this.handleSubmit}>
             <div className="panel-body container-fluid">
                 <div className="row">
                     <div className="col-md-1"></div>
-                    <div className="col-md-5"><DatePicker /></div>
+                    <div className="col-md-5"><DatePicker id={ (this.props.id | 'export_form_') + "_picker"} /></div>
                     <div className="col-md-5"><FormatPicker /></div>
                 </div>
                 <div className="row">
