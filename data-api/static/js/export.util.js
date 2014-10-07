@@ -30,11 +30,11 @@ var FormatPicker = React.createClass({
 var DatePicker = React.createClass({
 
     from: function() {
-        return $( "#" + this.props.name + "_from", this.getDOMNode() );
+        return $( "#" + this.props.id + "_from", this.getDOMNode() );
     },
 
     to: function() {
-        return $( "#" + this.props.name + "_to", this.getDOMNode() ); 
+        return $( "#" + this.props.id + "_to", this.getDOMNode() ); 
     },
 
     getInitialState: function() {
@@ -49,7 +49,7 @@ var DatePicker = React.createClass({
 
         from.datepicker({
             dateFormat: "yy-mm-dd",
-            defaultDate: "-1d",
+            defaultDate: "-1 day",
             disabled: true,
             changeMonth: true,
             changeYear: true,
@@ -58,6 +58,7 @@ var DatePicker = React.createClass({
                 to.datepicker("option", "minDate", selectedDate);
             }
         });
+        from.datepicker("setDate", moment().subtract(1, "days").startOf("day").toDate());
 
         to.datepicker({
             dateFormat: "yy-mm-dd",
@@ -71,6 +72,7 @@ var DatePicker = React.createClass({
                 from.datepicker("option", "maxDate", selectedDate);
             }
         });
+        to.datepicker("setDate", moment().endOf("day").toDate());
     },
 
     componentWillUnmount: function() {      
@@ -86,13 +88,13 @@ var DatePicker = React.createClass({
                 </div>
                 <div className="btn-group col-sm-11" data-toggle="buttons">
                     <button className="btn btn-default active"  onClick={this.handleClick} >
-                        <input type="radio" name="range_opt" value="1 days" defaultChecked />1 day
+                        <input type="radio" name="range_opt" value="1 days" defaultChecked />last day
                     </button>
                     <button className="btn btn-default"  onClick={this.handleClick} >
-                        <input type="radio" name="range_opt" value="7 days"/>7 days
+                        <input type="radio" name="range_opt" value="7 days"/>last 7 days
                     </button>
                     <button className="btn btn-default"  onClick={this.handleClick} >
-                        <input type="radio" name="range_opt" value="30 days"/>30 days
+                        <input type="radio" name="range_opt" value="30 days"/>last 30 days
                     </button>
                     <button className="btn btn-default"  onClick={this.handleClick} >
                         <input type="radio" name="range_opt" value="custom"/>Custom
@@ -102,9 +104,9 @@ var DatePicker = React.createClass({
 
             <div className="row">
                 <div className="col-sm-11">
-                    <label>From <input type="text" id={this.props.name + "_from"} name="from" className="form-control" />
+                    <label>From <input type="text" id={this.props.id + "_from"} name="from" className="form-control" />
                     </label>
-                    <label>to <input type="text" id={this.props.name + "_to"} name="to" className="form-control" />
+                    <label>to <input type="text" id={this.props.id + "_to"} name="to" className="form-control" />
                     </label>
                 </div>
             </div>
@@ -117,28 +119,28 @@ var DatePicker = React.createClass({
         this.setState( {rangeOption: newValue}, function(){
 
             var disabled = this.state.rangeOption !== "custom",
-                node = this.getDOMNode(),
-                fromDate = moment().subtract(this.state.rangeOption.split(' ')[0], 'days').format("YYYY-MM-DD");
-                toDate = moment().format("YYYY-MM-DD");
+                fromMmnt = moment().subtract(this.state.rangeOption.split(' ')[0], "days").startOf("day");
+                toMmnt = moment().endOf("day"),
+                fromWidget = this.from(),
+                toWidget = this.to();
 
-                console.log(fromDate, toDate);
-                
-                this.from().datepicker("option", { "disabled": disabled, "setDate": fromDate });
-                this.to().datepicker("option", { "disabled": disabled, "setDate": toDate});
-            
-
-                
+                fromWidget.datepicker("setDate", fromMmnt.toDate());                
+                fromWidget.datepicker("option", { "disabled": disabled });
+                toWidget.datepicker("setDate", toMmnt.toDate()); 
+                toWidget.datepicker("option", { "disabled": disabled }); 
         });
     }
 });
 
 
 var ExportForm = React.createClass({
-
+    getInitialState: function() {
+        return { devices: [] };
+    },
+    
     handleSubmit: function(e) {
-        console.log(e);
-        //e.preventDefault();
-        //alert(JSON.stringify(e));
+        console.log("Submit!", this.state.devices, e.nativeEvent.path);
+        e.preventDefault();
     },
 
     render: function() {

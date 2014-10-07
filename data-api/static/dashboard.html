@@ -51,7 +51,7 @@ function make_device_table(data) {
         $('<th>').text('MAC wlan'),
         $('<th>').text('MAC eth'),
         $('<th>').append(
-            $('<button>').prop({'class': 'btn btn-primary btn-xs', id: 'export_panel_button', 'disabled': false }).append(
+            $('<button>').prop({'class': 'btn btn-primary btn-xs', id: 'export_panel_button', 'disabled': true }).append(
                 $('<span>').text('Export '),
                 $('<span>').prop({'class': 'glyphicon glyphicon-export'})
             )
@@ -59,14 +59,6 @@ function make_device_table(data) {
     ).appendTo('#device_table');
 
     
-    $('#export_panel_button').click(function() { 
-         $('#export_panel').toggleClass('hidden');
-    });
-    
-    // export panel
-    React.renderComponent(ExportForm({id: "export_form", action: "Submit"}), $('#export_panel').get(0));
-
-
     $.each(data, function(i, item) {
         var $tr = $('<tr>').append(
             $('<td>').append($('<a>').prop({'href':'/static/testmap-osm.html?userid='+userid+'&token='+oauth_token+'&device_id='+item.device_id}).text(item.device_id)),
@@ -75,7 +67,7 @@ function make_device_table(data) {
             $('<td>').prop({'id': item.device_id+'_entries'}),
             $('<td>').prop({'id': item.device_id+'_wlan'}),
             $('<td>').prop({'id': item.device_id+'_eth'}),
-            $('<td>').prop({'id': item.device_id+'_export'}).append($('<input>').prop({type: 'checkbox'}))
+            $('<td>').prop({'id': item.device_id+'_export'}).append($('<input>').prop({type: 'checkbox', 'class': 'export'}).data('kinisi-id', item.device_id))
         ).appendTo('#device_table');
     });
 
@@ -145,6 +137,34 @@ function make_device_table(data) {
         }).complete(function() {});
     });
 
+    // export panel
+    var exportBox = React.renderComponent(ExportForm({id: "export_form", action: "Submit"}), $('#export_panel').get(0));
+
+    function enableExportView() {
+        var checked = $(":checkbox.export").filter(function(i, elem) { 
+            return elem.checked; 
+        }).map(function(i, elem) { 
+            return $(elem).data("kinisi-id"); 
+        });
+        var checkedForAny = checked.length > 0;
+        $("#export_panel_button").attr("disabled", !checkedForAny && $("#export_panel").hasClass("hidden") );
+        return checked;        
+    }
+
+    $("#export_panel_button").click(function(e) {
+        e.preventDefault(); 
+        $("#export_panel").toggleClass("hidden");
+        enableExportView();
+    });
+
+    $(":checkbox.export").change(function() {       
+        var checked = enableExportView();
+        exportBox.setState({"devices": checked.get()});    
+    });
+
+
+      
+
 }
 
     </script>
@@ -186,7 +206,7 @@ function make_device_table(data) {
             <div class="col-md-1"></div>
             <div class="col-md-10">
                 <h3> Devices </h3>
-                <div id="export_panel" class="visible"></div>
+                <div id="export_panel" class="hidden"></div>
                 <table class="table table-hover" id="device_table"></table>
             <div>
             <div class="col-md-1"></div>
