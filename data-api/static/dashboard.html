@@ -30,7 +30,7 @@ function initialize() {
     oauth_token = qs['token'];
     userid = qs['userid'];
 
-    $('#image_download').append($('<a>').prop({'href':'/download/rpi-image?userid='+userid+'&oauth_token='+oauth_token}).text('Download your rPi image here'));
+    //$('#image_download').append($('<a>').prop({'href':'/download/rpi-image?userid='+userid+'&oauth_token='+oauth_token}).text('Download your rPi image here'));
     
    
     var to = setTimeout(function() {
@@ -187,8 +187,8 @@ function make_device_table(data) {
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
             <li><a href="#">Dashboard</a></li>
-            <li><a href="#">Settings</a></li>
-            <li><a href="#">Profile</a></li>
+            <!--<li><a href="#">Settings</a></li>
+            <li><a href="#">Profile</a></li> -->
             <li><a href="#">Help</a></li>
           </ul>
           <form class="navbar-form navbar-right">
