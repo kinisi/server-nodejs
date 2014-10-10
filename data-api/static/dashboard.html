@@ -34,15 +34,22 @@ function initialize() {
     
    
     var to = setTimeout(function() {
-
       var url = "/table/device_configuration?oauth_token=" + oauth_token + "&userid=" + userid + "&c=api_token_id,device_id&f=api_token_id|eq|" + userid + "&o=device_id&limit=100"; // + QUERY_LIMIT;
 
-      $.getJSON(url, function(data) { $("#loading").hide(); make_device_table(data); }).complete(function() { to = null; });
-    }, 1000);
+      $.getJSON(url, function(data) {
+          $("#loading").hide();
+          $.getJSON("/table/api_token?oauth_token=" + oauth_token + "&userid=" + userid + "&c=token&f=id|eq|" + userid + ",status|eq|1",
+          function(tokenReq) {
+              console.log(tokenReq);
+              makeDeviceTable(data);
+          });
+
+      }).complete(function() { to = null; });
+    }, 10);
 
 }
 
-function make_device_table(data) {
+function makeDeviceTable(data) {
     $('<tr>').append(
         $('<th>').text('Device ID (view map)'),
         $('<th>').text('Last Measurement'),
@@ -67,7 +74,10 @@ function make_device_table(data) {
             $('<td>').prop({'id': item.device_id+'_entries'}),
             $('<td>').prop({'id': item.device_id+'_wlan'}),
             $('<td>').prop({'id': item.device_id+'_eth'}),
-            $('<td>').prop({'id': item.device_id+'_export'}).append($('<input>').prop({type: 'checkbox', 'class': 'export'}).data('kinisi-id', item.device_id))
+            $('<td>').prop({'id': item.device_id+'_export'}).append(
+                    $('<input>').prop({type: 'checkbox', 'class': 'export'})
+                            .data('kinisi-device-id', item.device_id)
+                            .data('kinisi-api-token', item.api_token))
         ).appendTo('#device_table');
     });
 
@@ -138,7 +148,8 @@ function make_device_table(data) {
     });
 
     // export panel
-    var exportBox = React.renderComponent(ExportForm({id: "export_form", action: "Submit"}), $('#export_panel').get(0));
+    var formUrl = "https://api.kinisi.cc/geoserver/api/export?api_token=" + oauth_token;
+    var exportBox = React.renderComponent(ExportForm({id: "export_form", action: "Submit", url: formUrl}), $('#export_panel').get(0));
 
     function enableExportView() {
         var checked = $(":checkbox.export").filter(function(i, elem) { 
