@@ -13,4 +13,4 @@ module.exports = {
         "defaultIndexPath": "/testmap.html",
         "basepath": __dirname + "/../static"
     }
-}
+};

@@ -26,4 +26,4 @@ module.exports = {
     "download": {
         "basepath": path.resolve(__dirname + "/../downloads")
    }
-}
+};
