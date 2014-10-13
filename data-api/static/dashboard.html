@@ -1,229 +1,78 @@
 <!DOCTYPE html>
-<html>
-  <head>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta charset="utf-8">
+
     <title>Kinisi Dashboard</title>
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
-    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/smoothness/jquery-ui.css" />
-    <link rel="stylesheet" href="css/dashboard.css" media="all">
-    <!-- Latest compiled and minified JavaScript -->
+
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Varela+Round" type="text/css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/smoothness/jquery-ui.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
-    <script src="//fb.me/react-0.11.2.js"></script>
-    <script src="//fb.me/JSXTransformer-0.11.2.js"></script>
+    <script src="//fb.me/react-0.11.2.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.3/moment.min.js"></script>
-    <script src="js/export.util.js" type="text/jsx"></script>
-
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="build/export.util.js"></script>
+    <script src="js/dashboard.js"></script>
     <script type="text/javascript">
-
-$(document).ready(function(){ initialize(); });
-
-var oauth_token = null;
-var userid = null;
-
-function initialize() {
-    var qs = location.search.slice(1).split("&").reduce(function(p,c) { c.split("=").every(function(k,i,a) { p[k] = a[i+1]; }); return p; }, {});
-
-    oauth_token = qs['token'];
-    userid = qs['userid'];
-
-    //$('#image_download').append($('<a>').prop({'href':'/download/rpi-image?userid='+userid+'&oauth_token='+oauth_token}).text('Download your rPi image here'));
-    
-   
-    var to = setTimeout(function() {
-      var url = "/table/device_configuration?oauth_token=" + oauth_token + "&userid=" + userid + "&c=api_token_id,device_id&f=api_token_id|eq|" + userid + "&o=device_id&limit=100"; // + QUERY_LIMIT;
-
-      $.getJSON(url, function(data) {
-          $("#loading").hide();
-          $.getJSON("/table/api_token?oauth_token=" + oauth_token + "&userid=" + userid + "&c=token&f=id|eq|" + userid + ",status|eq|1",
-          function(tokenReq) {
-              console.log(tokenReq);
-              makeDeviceTable(data);
-          });
-
-      }).complete(function() { to = null; });
-    }, 10);
-
-}
-
-function makeDeviceTable(data) {
-    $('<tr>').append(
-        $('<th>').text('Device ID (view map)'),
-        $('<th>').text('Last Measurement'),
-        $('<th>').text('Last Receive'),
-        $('<th>').text('Num Loc Entries'),
-        $('<th>').text('MAC wlan'),
-        $('<th>').text('MAC eth'),
-        $('<th>').append(
-            $('<button>').prop({'class': 'btn btn-primary btn-xs', id: 'export_panel_button', 'disabled': true }).append(
-                $('<span>').text('Export '),
-                $('<span>').prop({'class': 'glyphicon glyphicon-export'})
-            )
-        )
-    ).appendTo('#device_table');
-
-    
-    $.each(data, function(i, item) {
-        var $tr = $('<tr>').append(
-            $('<td>').append($('<a>').prop({'href':'/static/testmap-osm.html?userid='+userid+'&token='+oauth_token+'&device_id='+item.device_id}).text(item.device_id)),
-            $('<td>').prop({'id': item.device_id+'_measure'}),
-            $('<td>').prop({'id': item.device_id+'_receive'}),
-            $('<td>').prop({'id': item.device_id+'_entries'}),
-            $('<td>').prop({'id': item.device_id+'_wlan'}),
-            $('<td>').prop({'id': item.device_id+'_eth'}),
-            $('<td>').prop({'id': item.device_id+'_export'}).append(
-                    $('<input>').prop({type: 'checkbox', 'class': 'export'})
-                            .data('kinisi-device-id', item.device_id)
-                            .data('kinisi-api-token', item.api_token))
-        ).appendTo('#device_table');
-    });
-
-    $.each(data, function(i, item) {
-        var url = "/table/device_location?oauth_token=" + oauth_token + "&userid=" + userid + "&c=measure_time&f=device_id|eq|" + item.device_id + "&o=measure_time%20desc&limit=1";
-        $.getJSON(url, function(data) {
-            var cell_text;
-            if (data && data[0] && ("measure_time" in data[0])) {
-                cell_text = data[0].measure_time;
-            } else {
-                cell_text = "No data";
-            }
-            $('#'+item.device_id+'_measure').text(cell_text);
-        }).complete(function() {});
-    });
-
-    $.each(data, function(i, item) {
-        var url = "/table/device_location?oauth_token=" + oauth_token + "&userid=" + userid + "&c=receive_time&f=device_id|eq|" + item.device_id + "&o=receive_time%20desc&limit=1";
-        $.getJSON(url, function(data) {
-            var cell_text;
-            if (data && data[0] && ("receive_time" in data[0])) {
-                cell_text = data[0].receive_time;
-            } else {
-                cell_text = "No data";
-            }
-            $('#'+item.device_id+'_receive').text(cell_text);
-        }).complete(function() {});
-    });
-
-    $.each(data, function(i, item) {
-        //var url = "/table/device_interface?oauth_token=" + oauth_token + "&userid=" + userid + "&c=address&f=device_id|eq|" + item.device_id + ";name|like|eth&o=address&limit=1";
-        var url = "/table/device_location?oauth_token=" + oauth_token + "&userid=" + userid + "&f=device_id|eq|" + item.device_id + ";latitude|nnull;longitude|nnull&G=count|device_id";
-        $.getJSON(url, function(data) {
-            var cell_text;
-            if (data && data[0] && ("count(device_id)" in data[0])) {
-                cell_text = data[0]["count(device_id)"];
-            } else {
-                cell_text = "No data";
-            }
-            $('#'+item.device_id+'_entries').text(cell_text);
-        }).complete(function() {});
-    });
-
-    $.each(data, function(i, item) {
-        var url = "/table/device_interface?oauth_token=" + oauth_token + "&userid=" + userid + "&c=address&f=device_id|eq|" + item.device_id + ";name|like|wlan&o=address&limit=1";
-        $.getJSON(url, function(data) {
-            var cell_text;
-            if (data && data[0] && ("address" in data[0])) {
-                cell_text = data[0].address;
-            } else {
-                cell_text = "No data";
-            }
-            $('#'+item.device_id+'_wlan').text(cell_text);
-        }).complete(function() {});
-    });
-
-    $.each(data, function(i, item) {
-        var url = "/table/device_interface?oauth_token=" + oauth_token + "&userid=" + userid + "&c=address&f=device_id|eq|" + item.device_id + ";name|like|eth&o=address&limit=1";
-        $.getJSON(url, function(data) {
-            var cell_text;
-            if (data && data[0] && ("address" in data[0])) {
-                cell_text = data[0].address;
-            } else {
-                cell_text = "No data";
-            }
-            $('#'+item.device_id+'_eth').text(cell_text);
-        }).complete(function() {});
-    });
-
-    // export panel
-    var formUrl = "https://api.kinisi.cc/geoserver/api/export?api_token=" + oauth_token;
-    var exportBox = React.renderComponent(ExportForm({id: "export_form", action: "Submit", url: formUrl}), $('#export_panel').get(0));
-
-    function enableExportView() {
-        var checked = $(":checkbox.export").filter(function(i, elem) { 
-            return elem.checked; 
-        }).map(function(i, elem) { 
-            return $(elem).data("kinisi-id"); 
+        $(document).ready(function () {
+            initialize();
         });
-        var checkedForAny = checked.length > 0;
-        $("#export_panel_button").attr("disabled", !checkedForAny && $("#export_panel").hasClass("hidden") );
-        return checked;        
-    }
-
-    $("#export_panel_button").click(function(e) {
-        e.preventDefault(); 
-        $("#export_panel").toggleClass("hidden");
-        enableExportView();
-    });
-
-    $(":checkbox.export").change(function() {       
-        var checked = enableExportView();
-        exportBox.setState({"devices": checked.get()});    
-    });
-
-
-      
-
-}
-
     </script>
 
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-  </head>
-  <body>
+</head>
+<body>
 
-    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-      <div class="container-fluid">
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
         <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#">Kinisi</a>
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a id="logo" class="navbar-brand" href="#">
+                <img src="assets/kinisi_final.png" width="50px" height="38px"/>
+            </a>
         </div>
         <div class="navbar-collapse collapse">
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="#">Dashboard</a></li>
-            <!--<li><a href="#">Settings</a></li>
-            <li><a href="#">Profile</a></li> -->
-            <li><a href="#">Help</a></li>
-          </ul>
-          <form class="navbar-form navbar-right">
-            <input type="text" class="form-control" placeholder="Filter...">
-          </form>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="#">Dashboard</a></li>
+                <!--<li><a href="#">Settings</a></li>
+                <li><a href="#">Profile</a></li> -->
+                <li><a href="#">Help</a></li>
+            </ul>
+            <form class="navbar-form navbar-right">
+                <input type="text" class="form-control" placeholder="Filter...">
+            </form>
         </div>
-      </div>
     </div>
-    
-    <div id="image_download"></div>
-    <br>
-    <div id="loading">Devices list now loading.</div>
-    <div id="content" class="containter-fluid">
-        <div class="row">
-            <div class="col-md-1"></div>
-            <div class="col-md-10">
-                <h3> Devices </h3>
-                <div id="export_panel" class="hidden"></div>
-                <table class="table table-hover" id="device_table"></table>
-            <div>
-            <div class="col-md-1"></div>
-        </div>
-        
-    </div>
+</div>
 
-  </body>
+<div id="image_download"></div>
+<br>
+
+<div id="loading">Devices list now loading.</div>
+<div id="content" class="container-fluid">
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <h3> Devices </h3>
+
+            <div id="export_panel" class="hidden"></div>
+            <table class="table table-hover" id="device_table"></table>
+            <div>
+                <div class="col-md-1"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
 </html>

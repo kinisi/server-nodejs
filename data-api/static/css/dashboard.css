@@ -1,4 +1,10 @@
 /*
+ * Imports
+ */
+@import url(http://fonts.googleapis.com/css?family=Varela+Round);
+
+
+/*
  * Base structure
  */
 
@@ -17,12 +23,22 @@ body {
   border-bottom: 1px solid #eee;
 }
 
+.navbar {
+  font-family: 'Varela Round', sans-serif;
+}
+
 /*
  * Top navigation
  * Hide default border to remove 1px line.
  */
 .navbar-fixed-top {
   border: 0;
+}
+
+/* Move logo image within navbar */
+#logo {
+  margin-top: -8px;
+  margin-left: 10px;
 }
 
 /*

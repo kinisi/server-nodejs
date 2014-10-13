@@ -210,13 +210,13 @@ var ExportForm = React.createClass({
 
     handleDateChange: function(e) {
         this.setState({ from: e.value.from, to: e.value.to }, function() {
-            console.log("handleDateChange", JSON.stringify(e.value));
+            console.debug("handleDateChange", JSON.stringify(e.value));
         });
     },
 
     handleFormatChange: function(e) {
         this.setState({ format: e.value}, function() {
-            console.log("handleFormatChange", JSON.stringify(e.value));
+            console.debug("handleFormatChange", JSON.stringify(e.value));
         });
     },
 
