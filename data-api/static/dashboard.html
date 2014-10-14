@@ -21,7 +21,12 @@
     <script src="js/dashboard.js"></script>
     <script type="text/javascript">
         $(document).ready(function () {
-            initialize();
+            var qs = location.search.slice(1).split("&").reduce(function(p,c) {
+                c.split("=").every(function(k,i,a) { p[k] = a[i+1]; }); return p;
+            }, {});
+
+            //call dashboard.js
+            initialize(qs['userid'], qs['oauth_token'], qs['api_token']);
         });
     </script>
 
