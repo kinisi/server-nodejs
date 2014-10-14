@@ -222,6 +222,7 @@ var ExportForm = React.createClass({
 
     handleSubmit: function (e) {
         var dateFormat = "YYYYMMDDHHmmss",
+            api = this.props.api,
             url = this.props.url,
             startDate = moment(this.state.from).format(dateFormat),
             endDate = moment(this.state.to).format(dateFormat),
@@ -230,7 +231,12 @@ var ExportForm = React.createClass({
 
         e.preventDefault();
         this.state.devices.forEach(function (deviceId) {
-            that.ajaxDownload(url, {device_id: deviceId, start_time: startDate, end_time: endDate, format: fileFormat});
+            that.ajaxDownload(url, {
+                api_token: api,
+                device_id: deviceId,
+                start_time: startDate,
+                end_time: endDate,
+                format: fileFormat});
         });
     },
 
@@ -244,9 +250,8 @@ var ExportForm = React.createClass({
             iframeHtml;
 
         if ((iframe = $('#download_iframe')).length === 0) {
-            iframe = $("<iframe id='download_iframe'" +
-                    " style='display: none' src='about:blank'></iframe>"
-            ).appendTo("body");
+            iframe = $("<iframe id='download_iframe' style='display: none' src='about:blank'></iframe>")
+                .appendTo("body");
         }
 
         iframeDoc = iframe[0].contentWindow || iframe[0].contentDocument;

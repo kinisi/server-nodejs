@@ -26,12 +26,13 @@ function makeDeviceTable(data, userid, oauthToken, apiToken) {
     var DEVICE_ID_TAG = "kinisi-device-id";
 
     $('<tr>').append(
-        $('<th>').text('Device ID (view map)'),
+        $('<th>').text('Device Name'),
+        $('<th>').text('Map Link ').append($('<span>').prop({'class': 'glyphicon glyphicon-globe'})),
         $('<th>').text('Last Measurement'),
         $('<th>').text('Last Receive'),
-        $('<th>').text('Num Loc Entries'),
-        $('<th>').text('MAC wlan'),
-        $('<th>').text('MAC eth'),
+        $('<th>').text('Location Entries'),
+        $('<th>').text('MAC WLAN address'),
+        $('<th>').text('MAC ethernet address'),
         $('<th>').append(
             // attach disabled export button, enable on checking a device
             $('<button>').prop({'class': 'btn btn-primary btn-xs', id: 'export_panel_button', disabled: true })
@@ -45,7 +46,10 @@ function makeDeviceTable(data, userid, oauthToken, apiToken) {
 
     $.each(data, function(i, item) {
         var $tr = $('<tr>').append(
-            $('<td>').append($('<a>').prop({'href':'/static/testmap-osm.html?userid='+userid+'&token='+oauthToken+'&device_id='+item.device_id}).text(item.device_id)),
+            $('<td>').text('Device ' + (i + 1)),
+            $('<td>').append(
+                $('<a>').prop({ 'href':'/static/testmap-osm.html?userid=' + userid + '&token=' + oauthToken +
+                    '&device_id=' + item.device_id}).append($('<span>').prop({'class': 'glyphicon glyphicon-map-marker'}))),
             $('<td>').prop({'id': item.device_id+'_measure'}),
             $('<td>').prop({'id': item.device_id+'_receive'}),
             $('<td>').prop({'id': item.device_id+'_entries'}),
@@ -124,8 +128,13 @@ function makeDeviceTable(data, userid, oauthToken, apiToken) {
     });
 
     // export panel
-    var formUrl = "https://api.kinisi.cc/geoserver/api/export?api_token=" + apiToken;
-    var exportBox = React.renderComponent(ExportForm({id: "export_form", action: "Submit", url: formUrl}), $('#export_panel').get(0));
+    var formUrl = "https://api.kinisi.cc/geoserver/api/export";
+    var exportBox = React.renderComponent(ExportForm({
+        id: "export_form",
+        action: "Submit",
+        url: formUrl,
+        api: apiToken
+    }), $('#export_panel').get(0));
 
     function enableExportView() {
         var checked = $(":checkbox.export").filter(function(i, elem) {
