@@ -43,10 +43,6 @@ var FormatPicker = React.createClass({
                             <input type="radio" name="format" value="KML" />
                         KML
                         </button>
-                        <button className="btn btn-default" onClick={this.handleClick}>
-                            <input type="radio" name="format" value="JSON" />
-                        JSON
-                        </button>
                     </div>
                 </div>
             </div>
