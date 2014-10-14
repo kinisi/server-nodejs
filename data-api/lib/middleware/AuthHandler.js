@@ -17,10 +17,10 @@ module.exports.googleSignInCallback = function googleSignInCallback(req, res, ne
 		}
 
         // From: http://stackoverflow.com/questions/11355366/nodejs-redirect-url
-        db.query("SELECT id, token, oauth_token FROM api_token a JOIN oauth_token o ON a.id = o.user_id WHERE o.oauth_token = ? and o.oauth_service = 'google'", [user.token], function(err, rows, fields) {
+        db.query("SELECT id, a.token, oauth_token FROM api_token a JOIN oauth_token o ON a.id = o.user_id WHERE o.oauth_token = ? and o.oauth_service = 'google'", [user.token], function(err, rows, fields) {
             var map = "/static/dashboard.html";
             try {
-               map = map + "?userid=" + rows[0].id + "&api_token=" + rows[0].api_token + "&oauth_token=" + rows[0].oauth_token;
+               map = map + "?userid=" + rows[0].id + "&api_token=" + rows[0].token + "&oauth_token=" + rows[0].oauth_token;
             } catch (err) {
                // do nothing
             }
