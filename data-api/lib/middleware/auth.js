@@ -1,6 +1,5 @@
 var path = require("path");
 var db = require("../db");
-var queryparser = require("../queryparser");
 var rutil = require("../router_util");
 var logger = require("../logger");
 
@@ -18,9 +17,6 @@ module.exports = function authApi(req, res, next) {
     var userid = (req.method == "GET" ? ctx.url.query[AUTH_OAUTH_USERID] : null);
 
     if(oauth_token && userid) {
-        //db.query("SELECT a.* FROM api_token a JOIN oauth_token o on a.id = o.user_id WHERE oauth_token = ?", [req.params.token], function(err, rows, fields) {
-        //  res.end(JSON.stringify(rows));
-        //});
         db.query("SELECT a.* FROM api_token a JOIN oauth_token o on a.id = o.user_id WHERE oauth_token = ? and a.id = ?", [oauth_token, userid], function(err, results, fields) {
             //res.end(JSON.stringify(rows));
             if(results.length == 1 && results[0].status) {
@@ -42,4 +38,4 @@ module.exports = function authApi(req, res, next) {
     } else {
         rutil.handleUnauthorized.call(ctx, req, res, next);
     }
-}
+};
