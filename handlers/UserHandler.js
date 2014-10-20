@@ -13,9 +13,9 @@ var UserHandler = function() {
 
 function handleCreateUserRequest(req,res) {
 	console.log(req.params);
-};
+}
 
-function handleGetUsersRequest(req,res) {
+function handleGetUsersRequest(req, res) {
 	console.log("I am here");
 	user.find({}, function (err, users) {
 		if(err) {
@@ -25,7 +25,7 @@ function handleGetUsersRequest(req,res) {
 			res.send(users);
 		}
 	});	
-};
+}
 
 function handleGetUserRequest(req, res) {
     console.log("Get User");
@@ -34,22 +34,22 @@ function handleGetUserRequest(req, res) {
     });
 }
 
-function handleGetUserByToken(req,res) {
+function handleGetUserByToken(req, res) {
 	console.log("Lookup User by Token");
 	db.query("SELECT a.* FROM api_token a JOIN oauth_token o on a.id = o.user_id WHERE oauth_token = ?", [req.params.token], function(err, rows, fields) {
         res.end(JSON.stringify(rows));
     });
-};
+}
 
-function handleUpdateUserRequest(req,res) {
+function handleUpdateUserRequest(req, res) {
 	var dummy = {text: "dummy get"};
-	res.json = (200, dummy);
-};
+	res.end(dummy);
+}
 
-function handleDeleteUserRequest(req,res) {
+function handleDeleteUserRequest(req, res) {
 	var dummy = {text: "dummy get"};
-	res.json = (200, dummy);
-};
+	res.end(dummy);
+}
 
 module.exports = UserHandler;
 

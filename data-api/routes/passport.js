@@ -1,7 +1,7 @@
 var router = require("../lib/router");
 var AuthHandler = require("../lib/middleware/AuthHandler");
-var passport = require('passport');
-var google_strategy = require('passport-google-oauth').OAuth2Strategy;
+var passport = require("passport");
+var google_strategy = require("passport-google-oauth").OAuth2Strategy;
 var db = require("../lib/db");
 
 router.add("GET", /^\/auth\/google\/callback/, AuthHandler.googleSignInCallback);

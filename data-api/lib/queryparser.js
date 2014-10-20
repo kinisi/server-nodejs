@@ -1,5 +1,4 @@
 var mysql = require("mysql");
-var logger = require("./logger");
 
 var columns = module.exports.columns = function columns(v) {
     return (v) ? tokenize(v, ",").map(function(c) { return mysql.escapeId(c); }).join(",") : "*";
@@ -78,7 +77,7 @@ module.exports.template = function(s, qs) {
     G = G ? " group by " + G : "";
     var str = s.replace(/{{select}}/, c).replace(/{{where}}/, f).replace(/{{group by}}/, G).replace(/{{order by}}/, o);
     return str;
-}
+};
 
 
 function tokenize(s, delimeter) {

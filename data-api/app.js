@@ -25,7 +25,6 @@ function main() {
 
     app.listen(config.port);
     logger.info("Startup:", "Server running on port: " + config.port);
-
     logger.info("Startup:", "Configuration:", JSON.stringify(config, null, "\t"));
 }
 

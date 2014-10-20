@@ -4,17 +4,17 @@ module.exports.handleNotFound = function handleNotFound(req, res) {
     res.writeHead(404, "Not Found");
     res.end();
     logger.warn("Not found: " + req.url);
-}
+};
 
 module.exports.handleUnsupported = function handleUnsupported(req, res) {
     res.writeHead(405, "Method is not allowed");
     res.end();
-}
+};
 
 module.exports.handleUnauthorized = function handleUnauthorized(req, res) {
     res.writeHead(401, "Unauthorized");
     res.end();
-}
+};
 
 module.exports.handleException = function handleException(req, res, err) {
     res.writeHead(500, "Server Error");
@@ -22,7 +22,7 @@ module.exports.handleException = function handleException(req, res, err) {
     if(err && err.trace instanceof Function) { 
         logger.trace(err, req.url, req.headers);
     }
-}
+};
 
 module.exports.handleCrossDomain = function handleCrossDomain(req, res) {
     var str = '<?xml version="1.0" ?><cross-domain-policy><allow-access-from domain="*" /></cross-domain-policy>';
@@ -30,7 +30,7 @@ module.exports.handleCrossDomain = function handleCrossDomain(req, res) {
     res.setHeader("Content-Type", "text/xml");
     res.setHeader("Content-Length", str.length);
     res.end(str);
-}
+};
 
 // This should probably be in middleware:
 module.exports.writeCORSHeaders = function writeCorsHeaders(req, res, next) {
@@ -43,7 +43,7 @@ module.exports.writeCORSHeaders = function writeCorsHeaders(req, res, next) {
     }
 
     next();
-}
+};
 
 module.exports.writeJSONPBody = function writeJSONPBody(req, res, next) {
     var body = this.body;
@@ -52,4 +52,4 @@ module.exports.writeJSONPBody = function writeJSONPBody(req, res, next) {
     }
     res.setHeader("Content-Length", Buffer.byteLength(body));
     res.end(body);
-}
+};

@@ -30,4 +30,4 @@ module.exports = function tableQuery(req, res, next) {
     } else {
         rutil.handleNotFound.call(ctx, req, res, next);
     }
-}
+};

@@ -21,4 +21,4 @@ module.exports.query = function query(q, p, cb) {
         // callback with unwrapped array
         cb(null, rows);
     });
-}
+};
