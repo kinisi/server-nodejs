@@ -1,23 +1,23 @@
-server-nodejs
-=============
-
-### Deployment
-
-Running on ai1dev2.kinisi.cc, port 3000.
-
-```
-    $ nohup node app.js 3000 &
-```
-
-### Dependencies
-
-Connects to ai1dev2's MySQL instance, uses the `oauth_token` table.
+Kinisi Data API
+===============
 
 
-### Demonstration
+To install, from this directory, run the following:
 
-1. Goto: http://ai1dev2.kinisi.cc:3000/auth/google
-2. Sign-in to Google+
-3. Click the link at the end of debug output.
-  1. Tada, you have your Kinisi API_Token
-  2. Try removing the `token=...` querystring: it should not return data. (demonstrates security)
+    npm install 
+    
+
+
+For development, when touching front-end code, run the JSX watchdog:
+
+    node_modules/react-tools/bin/jsx --watch static/jsx static/build 
+     
+
+To run:
+
+    npm start
+
+
+
+[Simple Visualizer](http://localhost:5674/static/testmap-osm.html)
+

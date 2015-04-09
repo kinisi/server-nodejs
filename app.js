@@ -1,67 +1,31 @@
-var express = require('express')
-	,routes = require('./routes')
-	,auth_routes = require('./handlers/AuthHandler')
-	,UserHandler = require('./handlers/UserHandler')
-	,AuthHandler = require('./handlers/AuthHandler')
-	,passport = require('passport')
-	,user = require('./models/user')
+var express = require("express");
+var config = require("config");
+var passport = require("passport");
 
-var app = express();
+// local requires
+var logger = require("./lib/logger");
+var router = require("./lib/router");
 
-var google_strategy = require('passport-google-oauth').OAuth2Strategy;
+function main() {
 
-app.configure(function() {
+    require("./routes");
 
-	app.set('client-url','http://localhost:8000');
-	app.set('client-google-signin','/google?action=signin');
-	app.disable('x-powered-by');
+    var app = express();
 
-	app.use(express.logger('dev'));
-	app.use(express.json());
-	app.use(express.urlencoded());
-	app.use(express.methodOverride());
-	app.use(express.cookieParser());
-	app.use(passport.initialize());
-	app.use(app.router);
-	app.use(express.static(__dirname + '/public'));
-});
+    app.disable('x-powered-by');
 
-var allowCrossDomain = function(req, res, next) {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      
-    if ('OPTIONS' == req.method) {
-    	res.send(200);
-    }
-    else {
-    	next();
-    }
-}; 
+    app.use(express.logger('dev'));
+    app.use(express.json());
+    app.use(express.urlencoded());
+    app.use(express.methodOverride());
+    app.use(express.cookieParser());
+    app.use(passport.initialize());
+    app.use(router.handler);
+    app.use(express.static(__dirname + '/static'));
 
-app.configure('development', function() {
-	app.use(express.errorHandler({dumpExceptions: true, showStack: true}));
-	console.log("Starting in development mode");
-});
-
-passport.use(new google_strategy({
-    clientID: '584161997041-1sg7o8lonfli4rpfns07o1uu2gqnqe7t.apps.googleusercontent.com',
-    clientSecret: 'qCb7zqEkBxvu74fjihbbHRK4',
-    callbackURL: 'http://ai1dev2.kinisi.cc:3000/auth/google/callback'
-},
-function(accessToken, refreshToken, profile, done) {
-    user.saveToken(profile._json.email, accessToken, function(err) {
-        done(err, { "token": accessToken, "profile": profile });
-    });
+    app.listen(config.port);
+    logger.info("Startup:", "Server running on port: " + config.port);
+    logger.info("Startup:", "Configuration:", JSON.stringify(config, null, "\t"));
 }
-));
 
-var handlers = {
-	user: new UserHandler(),
-	auth: new AuthHandler()
-};
-
-routes.setup(app,handlers);
-
-app.listen(3000);
-console.log('Listening on port 3000');
+main();
