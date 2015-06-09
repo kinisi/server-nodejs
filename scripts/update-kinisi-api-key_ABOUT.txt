@@ -1,0 +1,7 @@
+Add a kinisi-rpi-blank.img SD card image here.
+
+Run "../scripts/update-kinisi-api-key.sh <userid> <API-Key>" to generate a new image with the new API key for that user
+
+The output will be named "kinisi-rpi-userid-<userid>.img.gz"
+
+Access via http://../download/rpi-image?userid=<userid>&oauth_token=<oauth_token>
