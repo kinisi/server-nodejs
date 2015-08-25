@@ -17,9 +17,9 @@ var saveToken = function(email, accessToken, callback) {
 };
 
 passport.use(new google_strategy({
-        clientID: '584161997041-6rmosthf1f3vfl6u5se1gml5pv973va0.apps.googleusercontent.com',
-        clientSecret: 'db4T8HsTPF62gKmUlUF_QBZn',
-        callbackURL: 'https://maps.kinisi.cc/auth/google/callback'
+        clientID: '605951486945-holdhofl3eeln2d070vclevdecfipud1.apps.googleusercontent.com',
+        clientSecret: 'x43BSgjZVg66EbciZTtj7nCw',
+        callbackURL: 'https://dashboard.kinisi.cc/auth/google/callback'
     },
     function(accessToken, refreshToken, profile, done) {
         saveToken(profile._json.email, accessToken, function(err) {
