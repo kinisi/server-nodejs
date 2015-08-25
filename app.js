@@ -5,7 +5,7 @@ var passport = require("passport");
 // local requires
 var logger = require("./lib/logger");
 var router = require("./lib/router");
-
+var secure = require("./lib/secure");
 function main() {
 
     require("./routes");
@@ -14,6 +14,7 @@ function main() {
 
     app.disable('x-powered-by');
 
+    app.use(secure.handler);
     app.use(express.logger('dev'));
     app.use(express.json());
     app.use(express.urlencoded());
